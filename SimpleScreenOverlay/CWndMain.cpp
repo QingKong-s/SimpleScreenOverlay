@@ -1,23 +1,25 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
 
-void HSVtoRGB(float h, float s, float v, float& r, float& g, float& b) {
-	int i = int(h * 6);
-	float f = h * 6 - i;
-	float p = v * (1 - s);
-	float q = v * (1 - f * s);
-	float t = v * (1 - (1 - f) * s);
+void HSV2RGB(float h, float s, float v, float& r, float& g, float& b)
+{
+	const int i = int(h * 6);
+	const float f = h * 6 - i;
+	const float p = v * (1 - s);
+	const float q = v * (1 - f * s);
+	const float t = v * (1 - (1 - f) * s);
 	float rf, gf, bf;
 
-	switch (i % 6) {
+	switch (i % 6)
+	{
 	case 0: rf = v; gf = t; bf = p; break;
 	case 1: rf = q; gf = v; bf = p; break;
 	case 2: rf = p; gf = v; bf = t; break;
 	case 3: rf = p; gf = q; bf = v; break;
 	case 4: rf = t; gf = p; bf = v; break;
 	case 5: rf = v; gf = p; bf = q; break;
+	default: ECK_UNREACHABLE;
 	}
-
 	r = rf;
 	g = gf;
 	b = bf;
@@ -39,8 +41,6 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		eck::DciCreateWindowTarget(hWnd, TRUE, m_Compositor, m_pDcDevice,
 			m_RootVisual, *m_pDcTarget.put(), m_Target, Dummy);
 
-		// winrt侧创建的视觉对象无法QI为Win32 DComp视觉对象，
-		// 但反过来，Win32 DComp视觉对象可以QI为Visual
 		com_ptr<IDCompositionVisual2> pContentVisual;
 		m_pDcDevice->CreateVisual(pContentVisual.put());
 		m_ContentVisual = pContentVisual.as<Visual>();
@@ -60,7 +60,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			0, 0, pt.x, pt.y, nullptr, this);
 		m_MenuContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, pt.x, pt.y, nullptr, this);
-
+		m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
 		RegisterTimeLine(this);
 		return lResult;
 	}
@@ -70,7 +70,6 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
 		return lResult;
-
 	}
 	break;
 	}
@@ -85,7 +84,6 @@ LRESULT CWndMain::OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e)
 	case Dui::RE_POSTRENDER:
 	case Dui::RE_COMMIT:
 	{
-
 		m_pDcDevice->Commit();
 	}
 	break;
@@ -99,6 +97,6 @@ void CWndMain::Tick(int iMs)
 	m_fHue += 0.002f;
 	if (m_fHue >= 1.f)
 		m_fHue -= 1.f;
-	HSVtoRGB(m_fHue, 1.f, 1.f, m_crAnimation.r, m_crAnimation.g, m_crAnimation.b);
+	HSV2RGB(m_fHue, 1.f, 1.f, m_crAnimation.r, m_crAnimation.g, m_crAnimation.b);
 	Redraw();
 }

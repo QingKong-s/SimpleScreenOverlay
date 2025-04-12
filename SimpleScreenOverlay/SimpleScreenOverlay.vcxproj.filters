@@ -60,6 +60,9 @@
     <ClInclude Include="CVeKeyStroke2.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="CFixTimeLine.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">

@@ -2,7 +2,7 @@
 #include "CVeMenuContainer.h"
 #include "CVeVisualContainer.h"
 
-class CWndMain final : public Dui::CDuiWnd, public eck::ITimeLine
+class CWndMain final : public Dui::CDuiWnd, public CFixTimeLine
 {
 private:
 	CVeMenuContainer m_MenuContainer{};
@@ -26,13 +26,7 @@ public:
 	LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e);
 #endif
 
-	ULONG STDMETHODCALLTYPE AddRef() { return 1; }
-	ULONG STDMETHODCALLTYPE Release() { return 1; }
-	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) { return E_NOINTERFACE; }
-
 	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid() { return TRUE; }
-	int STDMETHODCALLTYPE GetCurrTickInterval() { return 0; }
 
 	EckInlineNdCe const auto& GetCurrAnColor() const { return m_crAnimation; }
 };

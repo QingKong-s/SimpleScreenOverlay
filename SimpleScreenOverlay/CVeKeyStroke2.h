@@ -1,5 +1,5 @@
 ﻿#pragma once
-class CVeKeyStroke2 : public Dui::CElem, public eck::ITimeLine
+class CVeKeyStroke2 final : public Dui::CElem, public CFixTimeLine
 {
 private:
 	constexpr static int StayMillSecPreHit = 8000;// 每次击键后，指定键显示的毫秒数
@@ -66,11 +66,6 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	ULONG STDMETHODCALLTYPE AddRef() { return 1; }
-	ULONG STDMETHODCALLTYPE Release() { return 1; }
-	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) { return E_NOINTERFACE; }
-
 	void STDMETHODCALLTYPE Tick(int iMs);
 	BOOL STDMETHODCALLTYPE IsValid() { return !m_bIdle; }
-	int STDMETHODCALLTYPE GetCurrTickInterval() { return 0; }
 };

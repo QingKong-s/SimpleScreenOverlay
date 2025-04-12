@@ -195,6 +195,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CApp.h" />
+    <ClInclude Include="CFixTimeLine.h" />
     <ClInclude Include="CVeFunctionMenu.h" />
     <ClInclude Include="CVeKeyStroke.h" />
     <ClInclude Include="CVeKeyStroke2.h" />

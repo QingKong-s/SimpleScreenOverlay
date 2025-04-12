@@ -125,6 +125,8 @@ void CApp::Init()
 	m_Opt.bKeyStroke2 = 1;
 	m_Opt.bSpotLight = 1;
 	m_Opt.fSpotLightRadius = 40.f;
+	m_Opt.bWndHilight = 1;
+	m_Opt.bWndHilightDetectChild = 1;
 }
 
 IDWriteTextFormat* CApp::CreateTextFormat(float fSize)

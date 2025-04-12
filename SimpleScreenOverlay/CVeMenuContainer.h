@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "CVeFunctionMenu.h"
 
-class CVeMenuContainer : public Dui::CElem
+class CVeMenuContainer final : public Dui::CElem
 {
 private:
 	CVeFunctionMenu m_MenuBox[MenuIdxMax]{};

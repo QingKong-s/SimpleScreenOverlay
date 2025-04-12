@@ -1,5 +1,5 @@
 ﻿#pragma once
-class CVeKeyStroke : public Dui::CElem
+class CVeKeyStroke final : public Dui::CElem
 {
 private:
 	enum class Key

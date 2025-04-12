@@ -27,6 +27,7 @@
 #include <d3dcompiler.h>
 
 #include "CApp.h"
+#include "CFixTimeLine.h"
 
 using eck::PCVOID;
 using eck::PCBYTE;

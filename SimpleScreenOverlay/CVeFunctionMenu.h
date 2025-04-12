@@ -2,7 +2,7 @@
 #include "VeDef.h"
 #include "CVeMenuList.h"
 
-class CVeFunctionMenu : public Dui::CElem
+class CVeFunctionMenu final : public Dui::CElem
 {
 private:
 	CVeMenuList m_LV{};

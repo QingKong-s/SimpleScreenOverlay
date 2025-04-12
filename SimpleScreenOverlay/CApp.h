@@ -81,6 +81,8 @@ private:
 		BOOLEAN bKeyStroke;
 		BOOLEAN bKeyStroke2;
 		BOOLEAN bSpotLight;
+		BOOLEAN bWndHilight;
+		BOOLEAN bWndHilightDetectChild;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;

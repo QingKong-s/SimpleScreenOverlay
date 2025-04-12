@@ -15,6 +15,10 @@ enum
 	VeCyKeyStrokeMouseBtn = 24,
 	VeCxKeyStrokeCachePadding = 2,
 	VeCxKeyStrokeBorder = 1,
+
+	VeCxWndHiliBorder = 2,
+	VeCxWndTipMargin = 12,
+	VeCyWndTipMargin = 12,
 };
 
 enum

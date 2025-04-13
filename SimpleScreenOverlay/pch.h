@@ -25,9 +25,7 @@
 
 #include <d2d1effectauthor.h>
 #include <d3dcompiler.h>
-
-#include "CApp.h"
-#include "CFixTimeLine.h"
+#include <d2d1_2.h>
 
 using eck::PCVOID;
 using eck::PCBYTE;
@@ -43,3 +41,7 @@ using namespace Windows::UI;
 using namespace Windows::UI::Composition;
 using namespace Windows::UI::Composition::Desktop;
 #endif
+
+#include "CApp.h"
+#include "CFixTimeLine.h"
+#include "CGrTextCache.h"

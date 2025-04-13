@@ -196,6 +196,7 @@
   <ItemGroup>
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CFixTimeLine.h" />
+    <ClInclude Include="CGrTextCache.h" />
     <ClInclude Include="CVeFunctionMenu.h" />
     <ClInclude Include="CVeKeyStroke.h" />
     <ClInclude Include="CVeKeyStroke2.h" />
@@ -210,6 +211,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CApp.cpp" />
+    <ClCompile Include="CGrTextCache.cpp" />
     <ClCompile Include="CVeFunctionMenu.cpp" />
     <ClCompile Include="CVeKeyStroke.cpp" />
     <ClCompile Include="CVeKeyStroke2.cpp" />

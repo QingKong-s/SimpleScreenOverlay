@@ -5,11 +5,13 @@
 class CVeVisualContainer final : public Dui::CElem, public CFixTimeLine
 {
 private:
+	ID2D1DeviceContext1* m_pDC1{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	CVeKeyStroke m_KeyStroke{};
 	CVeKeyStroke2 m_KeyStroke2{};
 
-	D2D1_POINT_2F m_ptSpotLightCenter{};
+	D2D1_POINT_2F m_ptCursor{};
+
 	float m_fSpotLightMaxRadius{};
 	float m_msSpotLightAni{};
 	float m_kSpotLight{};
@@ -25,13 +27,14 @@ private:
 	float m_msWndHiliAni{};
 	HWND m_hWndCursorAt{};
 
-	eck::CRefStrW m_rsWndTip{};
-	IDWriteTextLayout* m_pTlWndTip{};
+	CGrTextCacheWithBk m_TcWndTip{};
 	D2D1_POINT_2F m_ptWndTipSrc{},
 		m_ptWndTipDst{},
 		m_ptWndTip{};
 	float m_msWndTipAni{};
 	BOOLEAN m_bWndTipAnimating{};
+
+	CGrTextCache m_TcRulerCursorTip{};
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 

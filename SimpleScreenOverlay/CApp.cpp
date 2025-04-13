@@ -118,7 +118,7 @@ void CApp::Init()
 #endif// SSO_USE_LOWLEVEL_HOOK
 
 	m_Opt.bImmdiateMode = 1;
-	m_Opt.bCrosshair = 1;
+	m_Opt.bCrosshair = 0;
 	m_Opt.cxCrosshairLine = 1.f;
 	m_Opt.dCrosshairCursorGap = 20.f;
 	m_Opt.bKeyStroke = 1;
@@ -127,6 +127,7 @@ void CApp::Init()
 	m_Opt.fSpotLightRadius = 40.f;
 	m_Opt.bWndHilight = 1;
 	m_Opt.bWndHilightDetectChild = 1;
+	m_Opt.bRuler = 0;
 }
 
 IDWriteTextFormat* CApp::CreateTextFormat(float fSize)

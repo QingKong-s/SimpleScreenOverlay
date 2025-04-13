@@ -8,7 +8,7 @@ private:
 		None,
 		FadeIn,	// 该键新加入列表，正在播放进入动画
 		FadeOut,// 该键显示超时，正在播放退出动画
-		RePos,	// 有键进入或退出，其他键位置需要重新计算
+		RePos,	// 有键进入或退出，当前键位置需要重新计算
 		Deleted,// 应删除
 	};
 	enum : BYTE

@@ -19,6 +19,9 @@ enum
 	VeCxWndHiliBorder = 2,
 	VeCxWndTipMargin = 12,
 	VeCyWndTipMargin = 12,
+
+	VeCxRulerTipMargin = 12,
+	VeCyRulerTipMargin = 12,
 };
 
 enum

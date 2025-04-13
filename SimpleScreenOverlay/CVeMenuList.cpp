@@ -4,8 +4,6 @@
 
 void CVeMenuList::PaintItem(int idx, const D2D1_RECT_F& rcItem, const D2D1_RECT_F& rcPaint)
 {
-	//__super::PaintItem(idx, rcItem, rcPaint);
-	//return;
 	const float Padding = GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
 	const float Padding2 = GetTheme()->GetMetrics(Dui::Metrics::LargePadding);
 

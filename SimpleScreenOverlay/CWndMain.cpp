@@ -55,7 +55,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
 		POINT pt{ GetClientWidth(),GetClientHeight() };
 		Phy2Log(pt);
-		// 保证VisualContainter的Z序低于MenuContainer
+		// 保证VisualContainer的Z序低于MenuContainer
 		m_VisualContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, pt.x, pt.y, nullptr, this);
 		m_MenuContainer.Create(nullptr, Dui::DES_VISIBLE, 0,

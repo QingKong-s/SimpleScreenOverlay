@@ -19,7 +19,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			ScreenToClient(GetWnd()->HWnd, &pt);
 			GetWnd()->Phy2Log(pt);
 			ClientToElem(pt);
-			m_ptSpotLightCenter = { (float)pt.x, (float)pt.y };
+			m_ptCursor = { (float)pt.x, (float)pt.y };
 
 			ECKBOOLNOT(m_bShowSpotLight);
 			m_bSpotLightReverse = !!!m_bShowSpotLight;
@@ -44,36 +44,71 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	case Notify::GlobalMouseMove:
 	{
 		ECK_DUILOCK;
-		auto pt{ n.pt };
+		BOOL bUpdate{};
+		D2D1_RECT_F rcUpdate{};
+		//===聚光灯
+		if (App->GetOpt().bSpotLight)
+		{
+			auto pt{ n.pt };
+			ScreenToClient(GetWnd()->HWnd, &pt);
+			GetWnd()->Phy2Log(pt);
+			ClientToElem(pt);
+			m_ptCursor = { (float)pt.x, (float)pt.y };
+			/*if (!App->GetOpt().bImmdiateMode &&
+				(App->GetOpt().bCrosshair || App->GetOpt().bRuler || m_bShowSpotLight))
+				InvalidateRect();*/
+		}
 		//===窗口高亮
 		if (App->GetOpt().bWndHilight)
 		{
 			const auto hWndCursorAt = App->GetOpt().bWndHilightDetectChild ?
-				eck::WndFromPoint(pt) : WindowFromPoint(pt);
+				eck::WndFromPoint(n.pt) : WindowFromPoint(n.pt);
 			RECT rcWnd;
 			GetWindowRect(hWndCursorAt, &rcWnd);
+			//---更新标尺文本
+			if (App->GetOpt().bRuler)
+			{
+				eck::CRefStrW rsRulerTip{};
+				rsRulerTip.Format(L"Left = %d, Top = %d\nRight = %d, Bottom = %d",
+					n.pt.x - rcWnd.left,
+					n.pt.y - rcWnd.top,
+					rcWnd.right - n.pt.x,
+					rcWnd.bottom - n.pt.y);
+				m_TcRulerCursorTip.Create(rsRulerTip.Data(), rsRulerTip.Size(),
+					GetTextFormat(), GetWidthF(), GetHeightF(), m_pDC1);
+			}
 			if (m_hWndCursorAt == hWndCursorAt &&
 				eck::EquRect(rcWnd, m_rcLastWndInScreen))
 				goto SkipUpdateWndHilight;
 			m_rcLastWndInScreen = rcWnd;
-
-			SafeRelease(m_pTlWndTip);
-			m_rsWndTip.Clear();
-			auto cchText = GetWindowTextLengthW(hWndCursorAt);
-			m_rsWndTip.PushBack(EckStrAndLen(L"Handle: "))
-				.AppendFormat(L"%p", hWndCursorAt);
-			m_rsWndTip.PushBack(EckStrAndLen(L"\nCaption: "));
-			auto psBuf = m_rsWndTip.PushBack(cchText);
-			GetWindowTextW(hWndCursorAt, psBuf, cchText + 1);
-			cchText = GetClassNameW(hWndCursorAt, nullptr, 0);
-			m_rsWndTip.PushBack(EckStrAndLen(L"\nClass: "));
-			const auto cchOld = m_rsWndTip.Size();
-			m_rsWndTip.Reserve(m_rsWndTip.Size() + MAX_PATH);
-			cchText = GetClassNameW(hWndCursorAt, 
-				m_rsWndTip.PushBack(MAX_PATH),
-				MAX_PATH);
-			m_rsWndTip.ReSize(cchOld + cchText);
-
+			//---更新标签文本
+			if (m_hWndCursorAt != hWndCursorAt)
+			{
+				eck::CRefStrW rsWndTip{};
+				rsWndTip.Clear();
+				auto cchText = GetWindowTextLengthW(hWndCursorAt);
+				rsWndTip.PushBack(EckStrAndLen(L"Handle: "))
+					.AppendFormat(L"%p", hWndCursorAt);
+				rsWndTip.PushBack(EckStrAndLen(L"\nCaption: "));
+				auto psBuf = rsWndTip.PushBack(cchText);
+				GetWindowTextW(hWndCursorAt, psBuf, cchText + 1);
+				cchText = GetClassNameW(hWndCursorAt, nullptr, 0);
+				rsWndTip.PushBack(EckStrAndLen(L"\nClass: "));
+				const auto cchOld = rsWndTip.Size();
+				rsWndTip.Reserve(rsWndTip.Size() + MAX_PATH);
+				cchText = GetClassNameW(hWndCursorAt,
+					rsWndTip.PushBack(MAX_PATH),
+					MAX_PATH);
+				rsWndTip.ReSize(cchOld + cchText);
+				rsWndTip.AppendFormat(L"Left = %d, Top = %d\nWidth = %d, Height = %d",
+					m_rcLastWndInScreen.left,
+					m_rcLastWndInScreen.top,
+					m_rcLastWndInScreen.right - m_rcLastWndInScreen.left,
+					m_rcLastWndInScreen.bottom - m_rcLastWndInScreen.top);
+				m_TcWndTip.Create(rsWndTip.Data(), rsWndTip.Size(),
+					GetTextFormat(), GetWidthF(), GetHeightF(), m_pDC1);
+			}
+			//---
 			eck::ScreenToClient(GetWnd()->HWnd, &rcWnd);
 			D2D1_RECT_F rcWndHili{ eck::MakeD2DRcF(rcWnd) };
 			GetWnd()->Phy2Log(rcWndHili);
@@ -100,17 +135,6 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			}
 		}
 	SkipUpdateWndHilight:;
-		//===聚光灯
-		if (App->GetOpt().bSpotLight)
-		{
-			ScreenToClient(GetWnd()->HWnd, &pt);
-			GetWnd()->Phy2Log(pt);
-			ClientToElem(pt);
-			m_ptSpotLightCenter = { (float)pt.x, (float)pt.y };
-			if ((App->GetOpt().bCrosshair && !App->GetOpt().bImmdiateMode)
-				&& m_bShowSpotLight)
-				InvalidateRect();
-		}
 	}
 	break;
 	}
@@ -143,7 +167,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
 			m_pBrush->SetColor(D2D1_COLOR_F{});
 			D2D1_ELLIPSE Ellipse;
-			Ellipse.point = D2D1::Point2F(m_ptSpotLightCenter.x, m_ptSpotLightCenter.y);
+			Ellipse.point = D2D1::Point2F(m_ptCursor.x, m_ptCursor.y);
 			Ellipse.radiusX = Ellipse.radiusY = std::max(
 				App->GetOpt().fSpotLightRadius,
 				m_fSpotLightMaxRadius * (1.f - m_kSpotLight));
@@ -151,10 +175,9 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->SetPrimitiveBlend(eOldBlend);
 		}
 		//===准星线
+		m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
 		if (App->GetOpt().bCrosshair && App->GetOpt().bImmdiateMode)
 		{
-			m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
-
 			const auto d = App->GetOpt().dCrosshairCursorGap;
 			const auto cxLine = App->GetOpt().cxCrosshairLine;
 			D2D1_POINT_2F pt1, pt2;
@@ -195,16 +218,48 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_hWndCursorAt)
 		{
 			m_pDC->DrawRectangle(m_rcWndHili, m_pBrush, (float)VeCxWndHiliBorder);
-			if (!m_pTlWndTip)
+			if (m_TcWndTip.IsValid())
 			{
-				eck::g_pDwFactory->CreateTextLayout(m_rsWndTip.Data(),
-					(UINT32)m_rsWndTip.Size(), GetTextFormat(),
-					GetWidthF(), GetHeightF(), &m_pTlWndTip);
+				D2D1::Matrix3x2F Mat;
+				m_pDC->GetTransform(&Mat);
+				const auto MatNew = Mat * D2D1::Matrix3x2F::Translation(
+					m_ptWndTip.x, m_ptWndTip.y);
+				m_pDC->SetTransform(MatNew);
+				m_pDC1->DrawGeometryRealization(m_TcWndTip.GetGeometryRealization(),
+					m_pBrush);
+				const auto crOld = m_pBrush->GetColor();
+				m_pBrush->SetColor(D2D1_COLOR_F{ .a = 0.2f });
+				m_pDC1->DrawGeometryRealization(m_TcWndTip.GetGeometryRealizationBk(),
+					m_pBrush);
+				m_pBrush->SetColor(crOld);
+				m_pDC->SetTransform(Mat);
 			}
-			if (m_pTlWndTip)
+		}
+		//===标尺
+		if (App->GetOpt().bRuler)
+		{
+			if (m_TcRulerCursorTip.IsValid())
 			{
-				m_pDC->DrawTextLayout(m_ptWndTip, m_pTlWndTip, m_pBrush,
-					Dui::DrawTextLayoutFlags);
+				D2D1::Matrix3x2F Mat;
+				m_pDC->GetTransform(&Mat);
+				const auto MatNew = Mat * D2D1::Matrix3x2F::Translation(
+					m_ptCursor.x + (float)VeCxRulerTipMargin,
+					m_ptCursor.y + (float)VeCyRulerTipMargin);
+				m_pDC->SetTransform(MatNew);
+				m_pDC1->DrawGeometryRealization(m_TcRulerCursorTip.GetGeometryRealization(),
+					m_pBrush);
+				m_pDC->SetTransform(Mat);
+				D2D1_POINT_2F pt1, pt2;
+				pt1.x = m_ptCursor.x;
+				pt1.y = std::max(ps.rcfClipInElem.top, m_rcWndHili.top);
+				pt2.x = m_ptCursor.x;
+				pt2.y = std::min(ps.rcfClipInElem.bottom, m_rcWndHili.bottom);
+				m_pDC->DrawLine(pt1, pt2, m_pBrush);
+				pt2.x = std::max(ps.rcfClipInElem.left, m_rcWndHili.left);
+				pt1.y = m_ptCursor.y;
+				pt1.x = std::min(ps.rcfClipInElem.right, m_rcWndHili.right);
+				pt2.y = m_ptCursor.y;
+				m_pDC->DrawLine(pt1, pt2, m_pBrush);
 			}
 		}
 		EndPaint(ps);
@@ -219,6 +274,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
+		m_pDC->QueryInterface(&m_pDC1);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);
@@ -252,6 +308,9 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 {
+	/*SSONOTIFY n;
+	GetCursorPos(&n.pt);
+	OnAppEvent(Notify::GlobalMouseMove, n);*/
 	if (m_bSpotLightAnimating)
 	{
 		if (m_bSpotLightReverse)

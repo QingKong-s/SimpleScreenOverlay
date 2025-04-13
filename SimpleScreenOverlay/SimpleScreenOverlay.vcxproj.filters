@@ -22,6 +22,9 @@
     <Filter Include="UI">
       <UniqueIdentifier>{5365e44a-6789-4a16-9930-9329fd76c8c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{198b4162-ad5e-44ed-94e7-ce9727d1e347}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -63,6 +66,9 @@
     <ClInclude Include="CFixTimeLine.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="CGrTextCache.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -97,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="CVeKeyStroke2.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CGrTextCache.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

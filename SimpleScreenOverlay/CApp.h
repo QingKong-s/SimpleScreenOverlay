@@ -83,6 +83,7 @@ private:
 		BOOLEAN bSpotLight;
 		BOOLEAN bWndHilight;
 		BOOLEAN bWndHilightDetectChild;
+		BOOLEAN bRuler;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;

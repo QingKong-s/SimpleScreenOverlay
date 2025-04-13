@@ -261,6 +261,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(清除)"sv,
 };
 
+constexpr float FadeInOutAnDuration = 6000.f;
 
 void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 {
@@ -408,7 +409,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos)
 		{
 			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, 300);
+			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
 			if (e.eState == ItemState::FadeIn)
 				e.fOpacity = k;
 			if (k >= 1.f)
@@ -428,7 +429,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 			float xDst, yDst;
 			CalcCenterBottomPos(xDst, yDst);
 			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, 300);
+			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
 			e.fOpacity = 1.f - k;
 			if (k >= 1.f)
 			{

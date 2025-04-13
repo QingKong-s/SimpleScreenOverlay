@@ -128,6 +128,8 @@ void CApp::Init()
 	m_Opt.bWndHilight = 1;
 	m_Opt.bWndHilightDetectChild = 1;
 	m_Opt.bRuler = 0;
+	m_Opt.rsWatermark = L"WATERMARK";
+	m_Opt.bWatermark = 1;
 }
 
 IDWriteTextFormat* CApp::CreateTextFormat(float fSize)

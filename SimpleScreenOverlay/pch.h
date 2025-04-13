@@ -26,6 +26,7 @@
 #include <d2d1effectauthor.h>
 #include <d3dcompiler.h>
 #include <d2d1_2.h>
+#include <dwrite_1.h>
 
 using eck::PCVOID;
 using eck::PCBYTE;

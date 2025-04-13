@@ -262,6 +262,13 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_pDC->DrawLine(pt1, pt2, m_pBrush);
 			}
 		}
+		//===水印
+		if (App->GetOpt().bWatermark)
+		{
+			m_pBrush->SetColor(D2D1_COLOR_F{ 1.f,1.f,1.f,0.3f });
+			m_pDC1->DrawGeometryRealization(m_TcWatermark.GetGeometryRealization(),
+				m_pBrush);
+		}
 		EndPaint(ps);
 	}
 	return 0;
@@ -278,6 +285,20 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);
+
+		const auto pTfWatermark = App->CreateTextFormat(42);
+		const auto cchWatermark = (UINT32)App->GetOpt().rsWatermark.Size();
+		m_TcWatermark.CreateTextLayout(App->GetOpt().rsWatermark.Data(),
+			cchWatermark, pTfWatermark, GetWidthF(), GetHeightF());
+		const auto pTlWatermark = m_TcWatermark.GetTextLayout();
+		IDWriteTextLayout1* pTlWatermark1;
+		pTlWatermark->QueryInterface(&pTlWatermark1);
+		pTlWatermark1->SetCharacterSpacing(6, 6, 0, { 0,cchWatermark });
+		pTlWatermark1->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		pTlWatermark1->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pTlWatermark1->Release();
+		m_TcWatermark.CreateGeometryRealization(m_pDC1);
+		pTfWatermark->Release();
 
 		m_KeyStroke.Create(nullptr, Dui::DES_VISIBLE, 0,
 			10, 10, 150, 400, this);

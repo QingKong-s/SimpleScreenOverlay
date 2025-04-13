@@ -36,6 +36,8 @@ private:
 
 	CGrTextCache m_TcRulerCursorTip{};
 
+	CGrTextCache m_TcWatermark{};
+
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
 	void CalcWindowTipPos(const D2D1_RECT_F& rcWnd, _Out_ D2D1_POINT_2F& ptTip);

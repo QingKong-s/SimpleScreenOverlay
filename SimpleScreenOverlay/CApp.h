@@ -84,10 +84,13 @@ private:
 		BOOLEAN bWndHilight;
 		BOOLEAN bWndHilightDetectChild;
 		BOOLEAN bRuler;
+		BOOLEAN bWatermark;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;
 		float fSpotLightRadius;
+
+		eck::CRefStrW rsWatermark;
 	};
 
 

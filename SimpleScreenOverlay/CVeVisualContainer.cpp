@@ -329,9 +329,6 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 {
-	/*SSONOTIFY n;
-	GetCursorPos(&n.pt);
-	OnAppEvent(Notify::GlobalMouseMove, n);*/
 	if (m_bSpotLightAnimating)
 	{
 		if (m_bSpotLightReverse)

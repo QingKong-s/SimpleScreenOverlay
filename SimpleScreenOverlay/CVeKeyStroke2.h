@@ -2,7 +2,8 @@
 class CVeKeyStroke2 final : public Dui::CElem, public CFixTimeLine
 {
 private:
-	constexpr static int StayMillSecPreHit = 8000;// 每次击键后，指定键显示的毫秒数
+	constexpr static int StayMillSecPreHit = 800;// 每次击键后，指定键显示的毫秒数
+	constexpr static int StayMillSecInit = 5000;// 第一次显示的毫秒数
 	enum class ItemState : BYTE
 	{
 		None,

@@ -261,7 +261,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(清除)"sv,
 };
 
-constexpr float FadeInOutAnDuration = 6000.f;
+constexpr float FadeInOutAnDuration = 400.f;
 
 void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 {
@@ -289,14 +289,14 @@ std::vector<CVeKeyStroke2::ITEM>::iterator CVeKeyStroke2::IkpInsert(
 	const auto it = std::lower_bound(m_vItem.begin(), m_vItem.end(), e);
 	if (it == m_vItem.end())// 新元素是最大的
 	{
-		m_vItem.emplace_back(Vk, StayMillSecPreHit, ItemState::FadeIn);
+		m_vItem.emplace_back(Vk, StayMillSecInit, ItemState::FadeIn);
 		bNewItem = TRUE;
 		return m_vItem.end() - 1;
 	}
 	else if (it->Vk != Vk)// 新元素插入到中间
 	{
 		const auto idx = std::distance(m_vItem.begin(), it);
-		m_vItem.emplace(it, Vk, StayMillSecPreHit, ItemState::FadeIn);
+		m_vItem.emplace(it, Vk, StayMillSecInit, ItemState::FadeIn);
 		bNewItem = TRUE;
 		return m_vItem.begin() + idx;
 	}
@@ -316,6 +316,8 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 	if (bNewItem)// 准备动画
 	{
 		CalcCenterBottomPos(it->xSrc, it->ySrc);
+		it->x = it->xSrc;
+		it->y = it->ySrc;
 		IkBeginRePos();
 	}
 	else if (it->eState == ItemState::FadeOut)
@@ -342,9 +344,11 @@ void CVeKeyStroke2::IkBeginRePos()
 	for (auto& e : m_vItem)
 	{
 		if (e.eState == ItemState::None ||
+			e.eState == ItemState::FadeIn ||
 			e.eState == ItemState::RePos)
 		{
-			e.eState = ItemState::RePos;
+			if (e.eState == ItemState::None)
+				e.eState = ItemState::RePos;
 			e.xSrc = e.x;
 			e.ySrc = e.y;
 			e.msTime = 0;
@@ -411,9 +415,13 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 			e.msTime += iMs;
 			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
 			if (e.eState == ItemState::FadeIn)
-				e.fOpacity = k;
+			{
+				if (k > e.fOpacity)
+					e.fOpacity = k;
+			}
 			if (k >= 1.f)
 			{
+				e.msTime = 0;
 				e.eState = ItemState::None;
 				e.x = xFinal;
 				e.y = yFinal;
@@ -430,7 +438,8 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 			CalcCenterBottomPos(xDst, yDst);
 			e.msTime += iMs;
 			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
-			e.fOpacity = 1.f - k;
+			if (1.f - k < e.fOpacity)
+				e.fOpacity = 1.f - k;
 			if (k >= 1.f)
 			{
 				e.eState = ItemState::Deleted;

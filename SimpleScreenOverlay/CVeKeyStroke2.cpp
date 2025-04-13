@@ -279,6 +279,16 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		IkOnKeyUp(n.Vk);
 	}
 	break;
+	case Notify::GlobalMouseMove:
+	{
+		ECK_DUILOCK;
+		auto pt{ n.pt };
+		ScreenToClient(GetWnd()->HWnd, &pt);
+		GetWnd()->Phy2Log(pt);
+		ClientToElem(pt);
+		IkOnMouseMove(pt);
+	}
+	break;
 	}
 }
 
@@ -318,7 +328,7 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		CalcCenterBottomPos(it->xSrc, it->ySrc);
 		it->x = it->xSrc;
 		it->y = it->ySrc;
-		IkBeginRePos();
+		IkpBeginRePos();
 	}
 	else if (it->eState == ItemState::FadeOut)
 	{
@@ -326,7 +336,7 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		it->xSrc = it->x;
 		it->ySrc = it->y;
 		it->msTime = 0;
-		IkBeginRePos();
+		IkpBeginRePos();
 	}
 }
 
@@ -339,13 +349,15 @@ void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
 	it->uFlags &= ~KIF_KEYDOWN;
 }
 
-void CVeKeyStroke2::IkBeginRePos()
+void CVeKeyStroke2::IkpBeginRePos()
 {
 	for (auto& e : m_vItem)
 	{
 		if (e.eState == ItemState::None ||
 			e.eState == ItemState::FadeIn ||
-			e.eState == ItemState::RePos)
+			e.eState == ItemState::RePos ||
+			e.eState == ItemState::Jump ||
+			e.eState == ItemState::Restore)
 		{
 			if (e.eState == ItemState::None)
 				e.eState = ItemState::RePos;
@@ -354,6 +366,51 @@ void CVeKeyStroke2::IkBeginRePos()
 			e.msTime = 0;
 		}
 	}
+}
+
+void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
+{
+	D2D1_POINT_2F pt{ eck::MakeD2dPtF(pt_) };
+	D2D1_RECT_F rc;
+	for (size_t i{}; auto& e : m_vItem)
+	{
+		if (e.eState == ItemState::None ||
+			e.eState == ItemState::Restore)
+		{
+			rc.left = e.x;
+			rc.top = e.y;
+			rc.right = rc.left + m_cxyBlock;
+			rc.bottom = rc.top + m_cxyBlock;
+			if (eck::PtInRect(rc, pt))
+				IkpBeginJump(e);
+		}
+		else if (e.eState == ItemState::Jump ||
+			e.eState == ItemState::Jumped)
+		{
+			CalcKeyItemNormalPos(i, rc.left, rc.top);
+			rc.right = rc.left + m_cxyBlock;
+			rc.bottom = rc.top + m_cxyBlock;
+			if (!eck::PtInRect(rc, pt))
+				IkpCancelJump(e);
+		}
+		++i;
+	}
+}
+
+void CVeKeyStroke2::IkpBeginJump(ITEM& e)
+{
+	e.eState = ItemState::Jump;
+	e.xSrc = e.x;
+	e.ySrc = e.y;
+	e.msTime = 0;
+}
+
+void CVeKeyStroke2::IkpCancelJump(ITEM& e)
+{
+	e.eState = ItemState::Restore;
+	e.xSrc = e.x;
+	e.ySrc = e.y;
+	e.msTime = 0;
 }
 
 LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -410,7 +467,8 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 	BOOL bDelayDelete{};
 	for (auto& e : m_vItem)
 	{
-		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos)
+		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos ||
+			e.eState == ItemState::Restore)
 		{
 			e.msTime += iMs;
 			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
@@ -451,6 +509,22 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 				e.y = e.ySrc + (yDst - e.ySrc) * k;
 			}
 		}
+		else if (e.eState == ItemState::Jump)
+		{
+			const float xDst = xFinal, yDst = 0.f;
+			e.msTime += iMs;
+			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
+			if (1.f - k < e.fOpacity)
+				e.fOpacity = 1.f - k;
+			if (k >= 1.f)
+				e.eState = ItemState::Jumped;
+			else
+			{
+				e.x = e.xSrc + (xDst - e.xSrc) * k;
+				e.y = e.ySrc + (yDst - e.ySrc) * k;
+			}
+		}
+
 		if (e.eState != ItemState::FadeIn &&
 			e.eState != ItemState::FadeOut &&
 			e.eState != ItemState::Deleted)
@@ -470,7 +544,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		for (size_t i = m_vItem.size(); i; --i)
 			if (m_vItem[i - 1].eState == ItemState::Deleted)
 				m_vItem.erase(m_vItem.begin() + i - 1);
-		IkBeginRePos();
+		IkpBeginRePos();
 	}
 }
 
@@ -480,7 +554,7 @@ void CVeKeyStroke2::CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float
 	x = (GetWidthF() - m_cxyBlock * m_vItem.size() -
 		(float)VeCxyKeyStroke2Padding * (m_vItem.size() - 1)) / 2.f +
 		(m_cxyBlock + (float)VeCxyKeyStroke2Padding) * idx;
-	y = (float)VeCxKeyStrokeBorder;
+	y = (GetHeightF() - m_cxyBlock) * 2.f / 5.f - m_cxyBlock / 2.f;
 }
 
 void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)

@@ -307,7 +307,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		eck::RCWH rcKs2;
 		rcKs2.cx = GetWidth() / 2;
 		rcKs2.x = (GetWidth() - rcKs2.cx) / 2;
-		rcKs2.cy = 210;
+		rcKs2.cy = 240;
 		rcKs2.y = GetHeight() - rcKs2.cy - 10;
 		m_KeyStroke2.Create(nullptr, Dui::DES_VISIBLE, 0,
 			rcKs2.x, rcKs2.y, rcKs2.cx, rcKs2.cy, this);

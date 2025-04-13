@@ -2,14 +2,17 @@
 class CVeKeyStroke2 final : public Dui::CElem, public CFixTimeLine
 {
 private:
-	constexpr static int StayMillSecPreHit = 800;// 每次击键后，指定键显示的毫秒数
+	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数
 	constexpr static int StayMillSecInit = 5000;// 第一次显示的毫秒数
 	enum class ItemState : BYTE
 	{
-		None,
-		FadeIn,	// 该键新加入列表，正在播放进入动画
-		FadeOut,// 该键显示超时，正在播放退出动画
-		RePos,	// 有键进入或退出，当前键位置需要重新计算
+		None,	// 正常
+		FadeIn,	// 新加入列表，正在播放进入动画
+		FadeOut,// 显示超时，正在播放退出动画
+		RePos,	// 位置需要重新计算，因为有键进入或退出
+		Jump,	// 避让光标，正在播放向上移动动画
+		Jumped,	// 已避让光标
+		Restore,// 取消避让光标，正在播放恢复动画
 		Deleted,// 应删除
 	};
 	enum : BYTE
@@ -50,7 +53,13 @@ private:
 
 	void IkOnKeyUp(UINT Vk);
 
-	void IkBeginRePos();
+	void IkpBeginRePos();
+
+	void IkOnMouseMove(POINT pt_);
+
+	void IkpBeginJump(ITEM& e);
+
+	void IkpCancelJump(ITEM& e);
 
 	void ChangeIdleState(BOOL bIdle, BOOL bWakeRenderThread = TRUE)
 	{

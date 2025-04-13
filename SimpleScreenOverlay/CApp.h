@@ -85,6 +85,7 @@ private:
 		BOOLEAN bWndHilightDetectChild;
 		BOOLEAN bRuler;
 		BOOLEAN bWatermark;
+		BOOLEAN bKSGiveAWayToCursor;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;

@@ -4,8 +4,8 @@ enum class Notify
 {
 	GlobalKeyDown,		// Vk
 	GlobalKeyUp,		// Vk
-	GlobalMouseDown,	// bLBtn
-	GlobalMouseUp,		// bLBtn
+	GlobalMouseDown,	// Vk
+	GlobalMouseUp,		// Vk
 	DoubleCtrl,			// 
 	GlobalMouseMove,	// pt
 };
@@ -14,8 +14,11 @@ struct SSONOTIFY
 {
 	union
 	{
-		UINT Vk;
-		BOOL bLBtn;
+		struct
+		{
+			UINT Vk;
+			BOOL bRepeat;
+		};
 		POINT pt;
 	};
 };
@@ -100,23 +103,6 @@ private:
 	OPT m_Opt{};
 
 	eck::CSignal<eck::NoIntercept_T, void, Notify, SSONOTIFY&> m_Sig{};
-
-	HHOOK m_hhkKeyboard{};
-	HHOOK m_hhkMouse{};
-
-	DWORD m_dwLastCtrlTime{};
-
-#if SSO_USE_LOWLEVEL_HOOK
-	static LRESULT __stdcall LowLevelKeyboardHookProc(
-		int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT __stdcall LowLevelMouseHookProc(
-		int nCode, WPARAM wParam, LPARAM lParam);
-#else
-	static LRESULT __stdcall KeyboardHookProc(
-		int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT __stdcall MouseHookProc(
-		int nCode, WPARAM wParam, LPARAM lParam);
-#endif// SSO_USE_LOWLEVEL_HOOK
 public:
 	void Init();
 

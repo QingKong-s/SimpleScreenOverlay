@@ -9,6 +9,8 @@ private:
 	CVeVisualContainer m_VisualContainer{};
 	D2D1_COLOR_F m_crAnimation{ .a = 1.f };
 	float m_fHue{};
+	ULONGLONG m_dwLastCtrlTick{};
+	BOOLEAN m_bKeyDown[256]{};
 #if SSO_WINRT
 	IInteropCompositorFactoryPartner* m_pInteropFactory{};
 	IDCompositionDesktopDevice* m_pDcDevice{};
@@ -19,6 +21,10 @@ private:
 	SpriteVisual m_RootVisual{ nullptr };
 	Visual m_ContentVisual{ nullptr };
 #endif
+
+	BOOL InitRawInput();
+
+	void OnInput(WPARAM wParam, LPARAM lParam);
 public:
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

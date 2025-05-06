@@ -261,7 +261,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(Clear)"sv,
 };
 
-constexpr float FadeInOutAnDuration = 4000.f;
+constexpr float FadeInOutAnDuration = 2600.f;
 constexpr float RePosAnDuration = 1000.f;
 constexpr float JumpAnDuration = 300.f;
 
@@ -270,12 +270,14 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	switch (eNotify)
 	{
 	case Notify::GlobalKeyDown:
+	case Notify::GlobalMouseDown:
 	{
 		ECK_DUILOCK;
 		IkOnKeyDown(n.Vk);
 	}
 	break;
 	case Notify::GlobalKeyUp:
+	case Notify::GlobalMouseUp:
 	{
 		ECK_DUILOCK;
 		IkOnKeyUp(n.Vk);

@@ -5,6 +5,8 @@
 class CVeVisualContainer final : public Dui::CElem, public CFixTimeLine
 {
 private:
+	constexpr static float SpotLightGenRadius = 40.f;
+
 	ID2D1DeviceContext1* m_pDC1{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	CVeKeyStroke m_KeyStroke{};
@@ -18,6 +20,7 @@ private:
 	BOOLEAN m_bShowSpotLight{};
 	BOOLEAN m_bSpotLightReverse{};
 	BOOLEAN m_bSpotLightAnimating{};
+	ID2D1GeometryRealization* m_pGrSpotLight{};
 
 	RECT m_rcLastWndInScreen{ -32000, -32000, 32000, 32000 };
 	BOOLEAN m_bWndHiliAnimating{};

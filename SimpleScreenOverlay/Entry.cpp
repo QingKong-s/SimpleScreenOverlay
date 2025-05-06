@@ -69,7 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #else
 	pWnd->SetPresentMode(Dui::PresentMode::DCompositionSurface);
 #endif
-	pWnd->Create(nullptr, WS_POPUP, /*WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST |*/ 0,
+	pWnd->Create(nullptr, WS_POPUP, WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 		mi.rcWork.left, mi.rcWork.top,
 		(mi.rcWork.right - mi.rcWork.left),
 		(mi.rcWork.bottom - mi.rcWork.top),

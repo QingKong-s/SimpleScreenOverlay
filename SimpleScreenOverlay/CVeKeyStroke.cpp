@@ -57,12 +57,22 @@ void CVeKeyStroke::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		InvalidateRect();
 		break;
 	case Notify::GlobalMouseDown:
-		idx = n.bLBtn ? Key::MLeft : Key::MRight;
+		if (n.Vk == VK_LBUTTON)
+			idx = Key::MLeft;
+		else if (n.Vk == VK_RBUTTON)
+			idx = Key::MRight;
+		else
+			break;
 		m_bKeyDown[(size_t)idx] = TRUE;
 		InvalidateRect();
 		break;
 	case Notify::GlobalMouseUp:
-		idx = n.bLBtn ? Key::MLeft : Key::MRight;
+		if (n.Vk == VK_LBUTTON)
+			idx = Key::MLeft;
+		else if (n.Vk == VK_RBUTTON)
+			idx = Key::MRight;
+		else
+			break;
 		m_bKeyDown[(size_t)idx] = FALSE;
 		InvalidateRect();
 		break;

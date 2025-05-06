@@ -25,12 +25,159 @@ void HSV2RGB(float h, float s, float v, float& r, float& g, float& b)
 	b = bf;
 }
 
+BOOL CWndMain::InitRawInput()
+{
+	(void)GetKeyboardState((BYTE*)&m_bKeyDown);
+	for (auto& e : m_bKeyDown)
+		if (e & 0x80)
+			e = TRUE;
+		else
+			e = FALSE;
+	const RAWINPUTDEVICE rid[]
+	{
+		{ 0x0001,0x0002,RIDEV_INPUTSINK,HWnd },
+		{ 0x0001,0x0006,RIDEV_INPUTSINK,HWnd },
+	};
+	return RegisterRawInputDevices(rid, ARRAYSIZE(rid), sizeof(RAWINPUTDEVICE));
+}
+
+void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
+{
+	RAWINPUT ri;
+	UINT cbBuf{ sizeof(ri) };
+	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+		&ri, &cbBuf, sizeof(RAWINPUTHEADER));
+	Notify eNotify[11];
+	SSONOTIFY n[11]{};
+	size_t cEvt{};
+	switch (ri.header.dwType)
+	{
+	case RIM_TYPEMOUSE:
+	{
+		if ((ri.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) ||
+			(ri.data.mouse.lLastX || ri.data.mouse.lLastY))
+		{
+			GetCursorPos(&n[cEvt].pt);
+			eNotify[cEvt] = Notify::GlobalMouseMove;
+			++cEvt;
+		}
+
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_LBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseUp;
+			n[cEvt].Vk = VK_LBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_RBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseUp;
+			n[cEvt].Vk = VK_RBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_MBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseUp;
+			n[cEvt].Vk = VK_MBUTTON;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_XBUTTON1;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_XBUTTON1;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_XBUTTON2;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseDown;
+			n[cEvt].Vk = VK_XBUTTON2;
+			++cEvt;
+		}
+		for (size_t i = 0; i < cEvt; ++i)
+			App->GetSignal().Emit(eNotify[i], n[i]);
+	}
+	break;
+	case RIM_TYPEKEYBOARD:
+	{
+		if (ri.data.keyboard.Message == WM_KEYDOWN ||
+			ri.data.keyboard.Message == WM_SYSKEYDOWN)
+		{
+			if (m_bKeyDown[ri.data.keyboard.VKey])
+				n[cEvt].bRepeat = TRUE;
+			m_bKeyDown[ri.data.keyboard.VKey] = TRUE;
+			eNotify[cEvt] = Notify::GlobalKeyDown;
+			n[cEvt].Vk = ri.data.keyboard.VKey;
+			if (!n[cEvt].bRepeat && (
+				ri.data.keyboard.VKey == VK_CONTROL ||
+				ri.data.keyboard.VKey == VK_LCONTROL ||
+				ri.data.keyboard.VKey == VK_RCONTROL))
+			{
+				const auto t = NtGetTickCount64();
+				if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime())
+				{
+					eNotify[cEvt] = Notify::DoubleCtrl;
+					++cEvt;
+				}
+				m_dwLastCtrlTick = NtGetTickCount64();
+			}
+			++cEvt;
+		}
+		if (ri.data.keyboard.Message == WM_KEYUP ||
+			ri.data.keyboard.Message == WM_SYSKEYUP)
+		{
+			EckDbgPrint(L"WM_KEYUP");
+			m_bKeyDown[ri.data.keyboard.VKey] = FALSE;
+			eNotify[cEvt] = Notify::GlobalKeyUp;
+			n[cEvt].Vk = ri.data.keyboard.VKey;
+			++cEvt;
+		}
+		for (size_t i = 0; i < cEvt; ++i)
+			App->GetSignal().Emit(eNotify[i], n[i]);
+	}
+	break;
+	}
+}
+
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_INPUT:
+		OnInput(wParam, lParam);
+		break;
+
 	case WM_CREATE:
 	{
+		InitRawInput();
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,

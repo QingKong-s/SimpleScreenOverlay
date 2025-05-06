@@ -145,7 +145,6 @@ void CVeVisualContainer::CalcWindowTipPos(const D2D1_RECT_F& rcWnd,
 {
 	ptTip.x = rcWnd.left + (float)VeCxWndTipMargin;
 	ptTip.y = rcWnd.top + (float)VeCyWndTipMargin;
-
 }
 
 LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -166,12 +165,21 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			const auto eOldBlend = m_pDC->GetPrimitiveBlend();
 			m_pDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
 			m_pBrush->SetColor(D2D1_COLOR_F{});
-			D2D1_ELLIPSE Ellipse;
-			Ellipse.point = D2D1::Point2F(m_ptCursor.x, m_ptCursor.y);
-			Ellipse.radiusX = Ellipse.radiusY = std::max(
+			D2D1::Matrix3x2F MatOld;
+			m_pDC->GetTransform(&MatOld);
+			const auto fScale = std::max(
 				App->GetOpt().fSpotLightRadius,
-				m_fSpotLightMaxRadius * (1.f - m_kSpotLight));
-			m_pDC->FillEllipse(Ellipse, m_pBrush);
+				m_fSpotLightMaxRadius * (1.f - m_kSpotLight)) / SpotLightGenRadius;
+			m_pDC->SetTransform(
+				D2D1::Matrix3x2F::Translation(
+					m_ptCursor.x - SpotLightGenRadius,
+					m_ptCursor.y - SpotLightGenRadius) *
+				D2D1::Matrix3x2F::Scale(
+					fScale, fScale,
+					{ (float)m_ptCursor.x,(float)m_ptCursor.y }) *
+				MatOld);
+			m_pDC1->DrawGeometryRealization(m_pGrSpotLight, m_pBrush);
+			m_pDC->SetTransform(MatOld);
 			m_pDC->SetPrimitiveBlend(eOldBlend);
 		}
 		//===准星线
@@ -283,6 +291,22 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_pDC->QueryInterface(&m_pDC1);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
+
+		ComPtr<ID2D1EllipseGeometry> pGeoCircle;
+		constexpr D2D1_ELLIPSE Circle
+		{
+			{ SpotLightGenRadius,SpotLightGenRadius },
+			SpotLightGenRadius,
+			SpotLightGenRadius
+		};
+		eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
+		float xDpi, yDpi;
+		m_pDC->GetDpi(&xDpi, &yDpi);
+		m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
+			D2D1::ComputeFlatteningTolerance(
+				D2D1::Matrix3x2F::Identity(),
+				xDpi, yDpi, 1.f), &m_pGrSpotLight);
+
 		App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);
 

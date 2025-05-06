@@ -5,26 +5,26 @@
 constexpr std::wstring_view KeyName[]
 {
 	LR"()"sv,
-	LR"(鼠标左键)"sv,
-	LR"(鼠标右键)"sv,
-	LR"(控制中断)"sv,
-	LR"(鼠标中键)"sv,
-	LR"(鼠标X1)"sv,
-	LR"(鼠标X2)"sv,
-	LR"(未定义)"sv,
-	LR"(Backspace)"sv,
+	LR"(LMB)"sv,
+	LR"(RMB)"sv,
+	LR"()"sv,
+	LR"(MMB)"sv,
+	LR"(X1)"sv,
+	LR"(X2)"sv,
+	LR"()"sv,
+	LR"(Back)"sv,
 	LR"(Tab)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
+	LR"()"sv,
+	LR"()"sv,
 	LR"(Clear)"sv,
 	LR"(Enter)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
+	LR"()"sv,
+	LR"()"sv,
 	LR"(Shift)"sv,
 	LR"(Ctrl)"sv,
 	LR"(Alt)"sv,
 	LR"(Pause)"sv,
-	LR"(Caps Lock)"sv,
+	LR"(CapsLk)"sv,
 	LR"(IME 假名/谚文)"sv,
 	LR"(IME 打开)"sv,
 	LR"(IME Junja)"sv,
@@ -36,7 +36,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(IME 不转换)"sv,
 	LR"(IME 接受)"sv,
 	LR"(IME 模式更改)"sv,
-	LR"(空格)"sv,
+	LR"(--)"sv,
 	LR"(Page Up)"sv,
 	LR"(Page Down)"sv,
 	LR"(End)"sv,
@@ -62,13 +62,13 @@ constexpr std::wstring_view KeyName[]
 	LR"(7)"sv,
 	LR"(8)"sv,
 	LR"(9)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
-	LR"(未定义)"sv,
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
 	LR"(A)"sv,
 	LR"(B)"sv,
 	LR"(C)"sv,
@@ -95,21 +95,21 @@ constexpr std::wstring_view KeyName[]
 	LR"(X)"sv,
 	LR"(Y)"sv,
 	LR"(Z)"sv,
-	LR"(Win(左))"sv,
-	LR"(Win(右))"sv,
+	LR"(LWin)"sv,
+	LR"(RWin)"sv,
 	LR"(Apps)"sv,
-	LR"(保留)"sv,
+	{},
 	LR"(Sleep)"sv,
-	LR"(NUM 0)"sv,
-	LR"(NUM 1)"sv,
-	LR"(NUM 2)"sv,
-	LR"(NUM 3)"sv,
-	LR"(NUM 4)"sv,
-	LR"(NUM 5)"sv,
-	LR"(NUM 6)"sv,
-	LR"(NUM 7)"sv,
-	LR"(NUM 8)"sv,
-	LR"(NUM 9)"sv,
+	LR"(N0)"sv,
+	LR"(N1)"sv,
+	LR"(N2)"sv,
+	LR"(N3)"sv,
+	LR"(N4)"sv,
+	LR"(N5)"sv,
+	LR"(N6)"sv,
+	LR"(N7)"sv,
+	LR"(N8)"sv,
+	LR"(N9)"sv,
 	LR"(*)"sv,
 	LR"(+)"sv,
 	LR"(Separator)"sv,
@@ -140,128 +140,130 @@ constexpr std::wstring_view KeyName[]
 	LR"(F22)"sv,
 	LR"(F23)"sv,
 	LR"(F24)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(Num Lock)"sv,
-	LR"(Scroll Lock)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(Shift(左))"sv,
-	LR"(Shift(右))"sv,
-	LR"(Ctrl(左))"sv,
-	LR"(Ctrl(右))"sv,
-	LR"(Alt(左))"sv,
-	LR"(Alt(右))"sv,
-	LR"(浏览器后退)"sv,
-	LR"(浏览器前进)"sv,
-	LR"(浏览器刷新)"sv,
-	LR"(浏览器停止)"sv,
-	LR"(浏览器搜索)"sv,
-	LR"(浏览器收藏)"sv,
-	LR"(浏览器开始/主页)"sv,
-	LR"(静音)"sv,
-	LR"(音量减)"sv,
-	LR"(音量加)"sv,
-	LR"(下一曲)"sv,
-	LR"(上一曲)"sv,
-	LR"(停止播放)"sv,
-	LR"(播放/暂停)"sv,
-	LR"(启动邮件)"sv,
-	LR"(选择媒体)"sv,
-	LR"(启动程序1)"sv,
-	LR"(启动程序2)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(; :)"sv,
-	LR"(= +)"sv,
-	LR"(, <)"sv,
-	LR"(- _)"sv,
-	LR"(. >)"sv,
-	LR"(/ ?)"sv,
-	LR"(` ~)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(保留)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"(未分配)"sv,
-	LR"([ {)"sv,
-	LR"(\ |)"sv,
-	LR"(] })"sv,
-	LR"(' ")"sv,
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	LR"(NumLk)"sv,
+	LR"(ScrLk)"sv,
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	LR"(LShift)"sv,
+	LR"(RShift)"sv,
+	LR"(LCtrl)"sv,
+	LR"(RCtrl)"sv,
+	LR"(LAlt)"sv,
+	LR"(RAlt)"sv,
+	LR"(BrsBack)"sv,
+	LR"(BrsFwd)"sv,
+	LR"(BrsRe)"sv,
+	LR"(BrsStop)"sv,
+	LR"(BrsSch)"sv,
+	LR"(BrsFav)"sv,
+	LR"(BrsHome)"sv,
+	LR"(MdSlt)"sv,
+	LR"(Vol-)"sv,
+	LR"(Vol+)"sv,
+	LR"(MdNxt)"sv,
+	LR"(MdPrv)"sv,
+	LR"(MdStop)"sv,
+	LR"(MdPP)"sv,
+	LR"(EMail)"sv,
+	LR"(SelMd)"sv,
+	LR"(Run1)"sv,
+	LR"(Run2)"sv,
+	{},
+	{},
+	LR"(;)"sv,// :
+	LR"(=)"sv,// +
+	LR"(,)"sv,// <
+	LR"(-)"sv,// _
+	LR"(.)"sv,// >
+	LR"(/)"sv,// ?
+	LR"(`)"sv,// ~
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	LR"([)"sv,// {
+	LR"(\)"sv,// |
+	LR"(])"sv,// }
+	LR"(')"sv,// "
 	LR"(其他键盘字符)"sv,
-	LR"(保留)"sv,
-	LR"(OEM特定)"sv,
+	{},
+	{},
 	LR"(<> /|)"sv,
-	LR"(OEM特定)"sv,
-	LR"(OEM特定)"sv,
+	{},
+	{},
 	LR"(IME Process)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(内部)"sv,
-	LR"(未分配)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
-	LR"(OEM 特定)"sv,
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
 	LR"(Attn)"sv,
 	LR"(CrSel)"sv,
 	LR"(ExSel)"sv,
 	LR"(ErEOF)"sv,
-	LR"(播放)"sv,
-	LR"(缩放)"sv,
-	LR"(保留)"sv,
+	LR"(Play)"sv,
+	LR"(Scale)"sv,
+	{},
 	LR"(PA1)"sv,
-	LR"(清除)"sv,
+	LR"(Clear)"sv,
 };
 
-constexpr float FadeInOutAnDuration = 400.f;
+constexpr float FadeInOutAnDuration = 4000.f;
+constexpr float RePosAnDuration = 1000.f;
+constexpr float JumpAnDuration = 300.f;
 
 void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 {
@@ -305,10 +307,9 @@ std::vector<CVeKeyStroke2::ITEM>::iterator CVeKeyStroke2::IkpInsert(
 	}
 	else if (it->Vk != Vk)// 新元素插入到中间
 	{
-		const auto idx = std::distance(m_vItem.begin(), it);
-		m_vItem.emplace(it, Vk, StayMillSecInit, ItemState::FadeIn);
+		const auto itNew = m_vItem.emplace(it, Vk, StayMillSecInit, ItemState::FadeIn);
 		bNewItem = TRUE;
-		return m_vItem.begin() + idx;
+		return itNew;
 	}
 	else// 新元素和已有元素相同
 	{
@@ -328,14 +329,6 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		CalcCenterBottomPos(it->xSrc, it->ySrc);
 		it->x = it->xSrc;
 		it->y = it->ySrc;
-		IkpBeginRePos();
-	}
-	else if (it->eState == ItemState::FadeOut)
-	{
-		it->eState = ItemState::FadeIn;
-		it->xSrc = it->x;
-		it->ySrc = it->y;
-		it->msTime = 0;
 		IkpBeginRePos();
 	}
 }
@@ -465,17 +458,21 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 	float xFinal, yFinal;
 	CalcKeyItemNormalPos(0, xFinal, yFinal);
 	BOOL bDelayDelete{};
-	for (auto& e : m_vItem)
+	EckCounter(m_vItem.size(), i)
 	{
+		auto& e = m_vItem[i];
 		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos ||
 			e.eState == ItemState::Restore)
 		{
 			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
+			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f,
+				(e.eState == ItemState::FadeIn) ? FadeInOutAnDuration :
+				(e.eState == ItemState::RePos) ? RePosAnDuration : JumpAnDuration);
 			if (e.eState == ItemState::FadeIn)
 			{
-				if (k > e.fOpacity)
-					e.fOpacity = k;
+				const auto k1 = std::clamp(k, 0.f, 1.f);
+				if (k1 > e.fOpacity)
+					e.fOpacity = k1;
 			}
 			if (k >= 1.f)
 			{
@@ -490,34 +487,17 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 				e.y = e.ySrc + (yFinal - e.ySrc) * k;
 			}
 		}
-		else if (e.eState == ItemState::FadeOut)
-		{
-			float xDst, yDst;
-			CalcCenterBottomPos(xDst, yDst);
-			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
-			if (1.f - k < e.fOpacity)
-				e.fOpacity = 1.f - k;
-			if (k >= 1.f)
-			{
-				e.eState = ItemState::Deleted;
-				bDelayDelete = TRUE;
-			}
-			else
-			{
-				e.x = e.xSrc + (xDst - e.xSrc) * k;
-				e.y = e.ySrc + (yDst - e.ySrc) * k;
-			}
-		}
 		else if (e.eState == ItemState::Jump)
 		{
 			const float xDst = xFinal, yDst = 0.f;
 			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, FadeInOutAnDuration);
-			if (1.f - k < e.fOpacity)
-				e.fOpacity = 1.f - k;
+			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, JumpAnDuration);
 			if (k >= 1.f)
+			{
 				e.eState = ItemState::Jumped;
+				e.x = xDst;
+				e.y = yDst;
+			}
 			else
 			{
 				e.x = e.xSrc + (xDst - e.xSrc) * k;
@@ -526,15 +506,16 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		}
 
 		if (e.eState != ItemState::FadeIn &&
-			e.eState != ItemState::FadeOut &&
 			e.eState != ItemState::Deleted)
 		{
 			if ((e.msRemain -= iMs) <= 0)
 			{
 				e.xSrc = e.x;
 				e.ySrc = e.y;
-				e.eState = ItemState::FadeOut;
+				e.eState = ItemState::Deleted;
 				e.msTime = 0;
+				e.fOpacity = 1.f;
+				bDelayDelete = TRUE;
 			}
 		}
 		xFinal += (m_cxyBlock + (float)VeCxyKeyStroke2Padding);
@@ -570,7 +551,7 @@ void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkgPressed);
 	else
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkg);
-	if (e.eState == ItemState::FadeIn || e.eState == ItemState::FadeOut)
+	if (e.eState == ItemState::FadeIn)
 	{
 		crBkg.a *= e.fOpacity;
 		crForegnd = m_pBrushForegnd->GetColor();
@@ -594,11 +575,28 @@ void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 		}
 	}
 	if (e.pTextLayout)
+	{
+		D2D1::Matrix3x2F MatOld;
+		if (KeyName[e.Vk].size() == 1)
+		{
+			m_pDC->GetTransform(&MatOld);
+			constexpr float fScale = 1.8f;
+			const D2D1_POINT_2F pt
+			{
+				(rc.left + rc.right) / 2.f,
+				(rc.top + rc.bottom) / 2.f
+			};
+			m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(
+				fScale, fScale, pt) * MatOld);
+		}
 		m_pDC->DrawTextLayout({ rc.left,rc.top }, e.pTextLayout,
 			m_pBrushForegnd, Dui::DrawTextLayoutFlags);
+		if (KeyName[e.Vk].size() == 1)
+			m_pDC->SetTransform(MatOld);
+	}
 	m_pDC->DrawRectangle(rc, m_pBrushForegnd, cxLine);
 
-	if (e.eState == ItemState::FadeIn || e.eState == ItemState::FadeOut)
+	if (e.eState == ItemState::FadeIn)
 		m_pBrushForegnd->SetColor(crForegnd);
 }
 

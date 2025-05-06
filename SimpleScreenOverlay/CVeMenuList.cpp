@@ -2,14 +2,14 @@
 #include "CVeMenuList.h"
 #include "CWndMain.h"
 
-void CVeMenuList::PaintItem(int idx, const D2D1_RECT_F& rcItem, const D2D1_RECT_F& rcPaint)
-{
+void CVeMenuList::LVPaintSubItem(int idx, int idxSub, int idxGroup,
+	const D2D1_RECT_F& rcSub, const D2D1_RECT_F& rcPaint) {
 	const float Padding = GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
 	const float Padding2 = GetTheme()->GetMetrics(Dui::Metrics::LargePadding);
 
 	D2D1_RECT_F rcFill;
-	eck::IntersectRect(rcFill, rcItem, rcPaint);
-	if (IsItemSel(idx))
+	eck::IntersectRect(rcFill, rcSub, rcPaint);
+	if (GetItemState(idx) & Dui::LEIF_SELECTED)
 		if (App->GetOpt().bImmdiateMode)
 			m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
 		else
@@ -25,7 +25,7 @@ SkipFill:
 
 	if (!e.rsText.IsEmpty() && !e.pTextLayout)
 	{
-		const auto cx = rcItem.right - rcItem.left;
+		const auto cx = rcSub.right - rcSub.left;
 		eck::g_pDwFactory->CreateTextLayout(e.rsText.Data(), e.rsText.Size(),
 			GetTextFormat(), cx, (float)m_cyItem, &e.pTextLayout);
 		e.pTextLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
@@ -45,7 +45,7 @@ SkipFill:
 		}
 		else
 			m_pBrush->SetColor(App->GetColor(CApp::CrText));
-		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pTextLayout,
+		m_pDC->DrawTextLayout({ 0,rcSub.top }, e.pTextLayout,
 			m_pBrush, Dui::DrawTextLayoutFlags);
 	}
 }
@@ -54,14 +54,6 @@ LRESULT CVeMenuList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
-	case WM_NOTIFY:
-		if (wParam == (WPARAM)&m_SB)
-			if (((Dui::DUINMHDR*)lParam)->uCode == Dui::EE_VSCROLL)
-			{
-				InvalidateRect();
-				return TRUE;
-			}
-		break;
 	case WM_CREATE:
 	{
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);

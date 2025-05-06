@@ -3,12 +3,11 @@ class CVeKeyStroke2 final : public Dui::CElem, public CFixTimeLine
 {
 private:
 	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数
-	constexpr static int StayMillSecInit = 5000;// 第一次显示的毫秒数
+	constexpr static int StayMillSecInit = 2000;// 第一次显示的毫秒数
 	enum class ItemState : BYTE
 	{
 		None,	// 正常
 		FadeIn,	// 新加入列表，正在播放进入动画
-		FadeOut,// 显示超时，正在播放退出动画
 		RePos,	// 位置需要重新计算，因为有键进入或退出
 		Jump,	// 避让光标，正在播放向上移动动画
 		Jumped,	// 已避让光标
@@ -24,16 +23,16 @@ private:
 	struct ITEM
 	{
 		UINT Vk;
-		int msRemain;
+		int msRemain;		// 剩余显示时间
 		ItemState eState;
-		BYTE uFlags;
+		BYTE uFlags;		// KIF_*
 		float fOpacity;		// 透明度
 		float msTime;		// 动画当前时间
 		float x, y;			// 当前位置
 		float xSrc, ySrc;	// 动画开始位置
 		IDWriteTextLayout* pTextLayout;
 
-		std::strong_ordering operator<=>(const ITEM& x) const
+		EckInlineNdCe std::strong_ordering operator<=>(const ITEM& x) const
 		{
 			return Vk <=> x.Vk;
 		}

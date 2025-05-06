@@ -66,13 +66,13 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
-		for (size_t i{}; auto & e : m_MenuBox)
+		/*for (size_t i{}; auto & e : m_MenuBox)
 		{
 			e.Create(MenuTitle[i], Dui::DES_VISIBLE, 0,
 				100, 100, VeCxFuncMenu, 400, this);
 			++i;
 		}
-		InitMenu();
+		InitMenu();*/
 	}
 	break;
 	}

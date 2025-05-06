@@ -127,7 +127,7 @@ void CApp::Init()
 	m_Opt.fSpotLightRadius = 40.f;
 	m_Opt.bWndHilight = 1;
 	m_Opt.bWndHilightDetectChild = 1;
-	m_Opt.bRuler = 0;
+	m_Opt.bRuler = 1;
 	m_Opt.rsWatermark = L"WATERMARK";
 	m_Opt.bWatermark = 1;
 	m_Opt.bKSGiveAWayToCursor = 1;

@@ -47,6 +47,17 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_ContentVisual.RelativeSizeAdjustment({ 1.f, 1.f });
 		m_RootVisual.Children().InsertAtTop(m_ContentVisual);
 
+		eck::CBecAero Mica{};
+		D2D1_COLOR_F crMica{ 1.f,1.f,1.f }, crLuma;
+		eck::BecGetEffectiveColor(crMica, crLuma, 1.f, 0.85f);
+
+		CompositionSurfaceBrush NoiseBrush{ nullptr };
+		eck::BecCreateNoiseBrush(m_Compositor, NoiseBrush);
+
+		Mica.Connect(crMica, crLuma, TRUE);
+		m_RootVisual.Brush(Mica.CreateBrushAuto(m_Compositor,
+			m_Compositor.CreateBackdropBrush()));
+
 		const auto pDcVisual = m_ContentVisual.as<IDCompositionVisual2>();
 		IDCompositionDevice* pDcDevice;
 		m_pDcDevice->QueryInterface(&pDcDevice);

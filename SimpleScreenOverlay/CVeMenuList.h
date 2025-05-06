@@ -13,7 +13,8 @@ public:
 	std::vector<ITEM> m_vItem{};
 	ID2D1SolidColorBrush* m_pBrush{};
 private:
-	void PaintItem(int idx, const D2D1_RECT_F& rcItem, const D2D1_RECT_F& rcPaint) override;
+	void LVPaintSubItem(int idx, int idxSub, int idxGroup,
+		const D2D1_RECT_F& rcSub, const D2D1_RECT_F& rcPaint) override;
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

@@ -20,5 +20,5 @@ public:
 
 	EckInlineNdCe auto& GetMenuList() { return m_LV; }
 
-	void CommitItemChange();
+	void ReCalcIdealSize();
 };

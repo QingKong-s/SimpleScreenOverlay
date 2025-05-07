@@ -2,13 +2,14 @@
 #include "CVeMenuList.h"
 #include "CWndMain.h"
 
-void CVeMenuList::LVPaintSubItem(int idx, int idxSub, int idxGroup,
-	const D2D1_RECT_F& rcSub, const D2D1_RECT_F& rcPaint) {
+void CVeMenuList::LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint)
+{
 	const float Padding = GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
 	const float Padding2 = GetTheme()->GetMetrics(Dui::Metrics::LargePadding);
 
-	D2D1_RECT_F rcFill;
-	eck::IntersectRect(rcFill, rcSub, rcPaint);
+	D2D1_RECT_F rcFill, rcItem;
+	GetItemRect(idx, rcItem);
+	eck::IntersectRect(rcFill, rcItem, rcPaint);
 	if (GetItemState(idx) & Dui::LEIF_SELECTED)
 		if (App->GetOpt().bImmdiateMode)
 			m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
@@ -23,17 +24,21 @@ void CVeMenuList::LVPaintSubItem(int idx, int idxSub, int idxGroup,
 SkipFill:
 	auto& e = m_vItem[idx];
 
-	if (!e.rsText.IsEmpty() && !e.pTextLayout)
+	ML_DISPINFO di{ UIE_MENU_GETDISPINFO };
+	di.idx = idx;
+	GenElemNotify(&di);
+
+	if (di.cchText && !e.pLayout.Get())
 	{
-		const auto cx = rcSub.right - rcSub.left;
-		eck::g_pDwFactory->CreateTextLayout(e.rsText.Data(), e.rsText.Size(),
-			GetTextFormat(), cx, (float)m_cyItem, &e.pTextLayout);
-		e.pTextLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-		e.pTextLayout->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		e.pTextLayout->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		const auto cx = rcItem.right - rcItem.left;
+		eck::g_pDwFactory->CreateTextLayout(di.pszText, di.cchText,
+			GetTextFormat(), cx, (float)m_cyItem, &e.pLayout);
+		e.pLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		e.pLayout->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		e.pLayout->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
 
-	if (e.pTextLayout)
+	if (e.pLayout.Get())
 	{
 		if (App->GetOpt().bImmdiateMode)
 		{
@@ -45,30 +50,7 @@ SkipFill:
 		}
 		else
 			m_pBrush->SetColor(App->GetColor(CApp::CrText));
-		m_pDC->DrawTextLayout({ 0,rcSub.top }, e.pTextLayout,
+		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pLayout.Get(),
 			m_pBrush, Dui::DrawTextLayoutFlags);
 	}
-}
-
-LRESULT CVeMenuList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
-	{
-	case WM_CREATE:
-	{
-		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
-	}
-	break;
-	case WM_DESTROY:
-	{
-		SafeRelease(m_pBrush);
-	}
-	break;
-	}
-	return __super::OnEvent(uMsg, wParam, lParam);
-}
-
-LRESULT CVeMenuList::OnNotify(Dui::DUINMHDR* pnm, BOOL& bProcessed)
-{
-	return 0;
 }

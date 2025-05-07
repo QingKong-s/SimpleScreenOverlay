@@ -10,27 +10,20 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
 
-		D2D1_ROUNDED_RECT rrc;
-		rrc.rect = GetRectInClientF();
-		ClientToElem(rrc.rect);
-		rrc.radiusX = rrc.radiusY = 16;
+		D2D1_RECT_F rc{ GetViewRectF() };
 		m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuTitle));
-		m_pDC->FillRoundedRectangle(rrc, m_pBrush);
+		m_pDC->FillRectangle(rc, m_pBrush);
 
-		rrc.rect.left += (float)VeCxFuncMenuBorder;
-		rrc.rect.top += (float)VeCyFuncMenuTitle;
-		rrc.rect.right -= (float)VeCxFuncMenuBorder;
-		rrc.rect.bottom -= float(VeCyFuncMenuFooter / 2);
-		rrc.radiusX = rrc.radiusY = 10;
-		rrc.rect.top += rrc.radiusY;
-		m_pDC->PushAxisAlignedClip(rrc.rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-		rrc.rect.top -= rrc.radiusY;
+		rc.left += (float)VeCxFuncMenuBorder;
+		rc.top += (float)VeCyFuncMenuTitle;
+		rc.right -= (float)VeCxFuncMenuBorder;
+		rc.bottom -= float(VeCyFuncMenuFooter / 2);
+
 		m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuBkg));
-		m_pDC->FillRoundedRectangle(rrc, m_pBrush);
-		m_pDC->PopAxisAlignedClip();
-
-		rrc.rect.bottom = rrc.rect.top + rrc.radiusY;
-		m_pDC->FillRectangle(rrc.rect, m_pBrush);
+		const auto eOldBlend = m_pDC->GetPrimitiveBlend();
+		m_pDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
+		m_pDC->FillRectangle(rc, m_pBrush);
+		m_pDC->SetPrimitiveBlend(eOldBlend);
 
 		m_pBrush->SetColor(App->GetColor(CApp::CrText));
 		if (!m_pTextLayout && !GetText().IsEmpty())
@@ -56,6 +49,15 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		rc.right = GetWidth() - VeCxFuncMenuBorder;
 		rc.bottom = GetHeight() - VeCyFuncMenuFooter;
 		m_LV.SetRect(rc);
+	}
+	break;
+
+	case WM_NOTIFY:
+	{
+		const auto pnm = (Dui::DUINMHDR*)lParam;
+		if (pnm->uCode == UIE_MENU_GETDISPINFO &&
+			(WPARAM)&m_LV == wParam)
+			return GenElemNotify(pnm);
 	}
 	break;
 
@@ -123,12 +125,11 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void CVeFunctionMenu::CommitItemChange()
+void CVeFunctionMenu::ReCalcIdealSize()
 {
-	auto cyList = int(m_LV.GetItems().size()) *
+	auto cyList = m_LV.GetItemCount() *
 		(VeCyFuncMenuItem + VeCyFuncMenuItemPadding);
-	cyList += (VeCyFuncMenuItemPadding * 2);
+	cyList += (VeCyFuncMenuItemPadding);
 	m_LV.SetSize(GetWidth(), cyList);
 	SetSize(GetWidth(), VeCyFuncMenuTitle + cyList + VeCyFuncMenuFooter);
-	m_LV.SetItemCount(int(m_LV.GetItems().size()));
 }

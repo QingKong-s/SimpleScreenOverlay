@@ -3,7 +3,8 @@
 
 constexpr static PCWSTR MenuTitle[]
 {
-	L"渲染"
+	L"渲染",
+	L"系统工具"
 };
 
 enum class MRender
@@ -18,15 +19,13 @@ enum class MRender
 	Ruler,
 };
 
-using namespace std::literals;
-
 struct ITEM_DESC
 {
 	std::wstring_view svText;
 	std::wstring_view svTip;
 };
 
-ITEM_DESC ItemRender[]
+constexpr static ITEM_DESC ItemRender[]
 {
 	{ L"准星线"sv, L"在屏幕上显示准星线"sv },
 	{ L"按键显示"sv, L"显示按键输入"sv },
@@ -37,17 +36,17 @@ ITEM_DESC ItemRender[]
 	{ L"窗口提示"sv, L"显示在光标所在窗口的详细信息"sv },
 	{ L"标尺"sv, L"显示标尺"sv },
 };
-
-void CVeMenuContainer::InitMenu()
+constexpr static ITEM_DESC ItemTools[]
 {
-	auto& Render = m_MenuBox[0];
-	auto& vItemRender = Render.GetMenuList().GetItems();
-
-	for (const auto& e : ItemRender)
-		vItemRender.emplace_back(e.svText);
-	Render.CommitItemChange();
-
-}
+	{ L"重启资源管理器"sv },
+	{ L"计算器"sv },
+	{ L"设置"sv },
+	{ L"命令提示符"sv },
+	{ L"注册表编辑器"sv },
+	{ L"组策略编辑器"sv },
+	{ L"本地用户和组"sv },
+	{ L"桌面"sv },
+};
 
 LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -64,15 +63,38 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 
+	case WM_NOTIFY:
+	{
+		if (((Dui::DUINMHDR*)lParam)->uCode != UIE_MENU_GETDISPINFO)
+			break;
+		const auto p = (ML_DISPINFO*)lParam;
+		if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+		{
+			p->pszText = ItemRender[p->idx].svText.data();
+			p->cchText = (int)ItemRender[p->idx].svText.size();
+		}
+		else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam)
+		{
+			p->pszText = ItemTools[p->idx].svText.data();
+			p->cchText = (int)ItemTools[p->idx].svText.size();
+		}
+	}
+	return 0;
+
 	case WM_CREATE:
 	{
-		/*for (size_t i{}; auto & e : m_MenuBox)
+		int x = 120;
+		for (size_t i{}; auto & e : m_MenuBox)
 		{
 			e.Create(MenuTitle[i], Dui::DES_VISIBLE, 0,
-				100, 100, VeCxFuncMenu, 400, this);
+				x, 140, VeCxFuncMenu, 400, this);
+			x += (VeCxFuncMenu + 10);
 			++i;
 		}
-		InitMenu();*/
+		m_MenuBox[MenuIdxRender].GetMenuList().SetItemCount(ARRAYSIZE(ItemRender));
+		m_MenuBox[MenuIdxRender].ReCalcIdealSize();
+		m_MenuBox[MenuIdxTools].GetMenuList().SetItemCount(ARRAYSIZE(ItemTools));
+		m_MenuBox[MenuIdxTools].ReCalcIdealSize();
 	}
 	break;
 	}

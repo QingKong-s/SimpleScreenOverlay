@@ -55,7 +55,7 @@ public:
 	{
 		eck::ColorrefToD2dColorF(eck::Colorref::White),
 
-		eck::ColorrefToD2dColorF(RGB(72, 88,104), 0.5f),
+		eck::ColorrefToD2dColorF(RGB( 3,201,255), 0.7f),
 		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
 		eck::ColorrefToD2dColorF(RGB(38, 39, 40), 0.7f),
 		eck::ColorrefToD2dColorF(RGB(10, 11, 12), 0.6f),

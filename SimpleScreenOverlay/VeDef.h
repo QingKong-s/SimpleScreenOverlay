@@ -2,8 +2,8 @@
 enum
 {
 	VeCxFuncMenuBorder = 2,
-	VeCxFuncMenu = 120,
-	VeCyFuncMenuTitle = 24,
+	VeCxFuncMenu = 130,
+	VeCyFuncMenuTitle = 26,
 	VeCyFuncMenuFooter = 16,
 	VeCyFuncMenuItem = 30,
 	VeCyFuncMenuItemPadding = 1,
@@ -27,6 +27,7 @@ enum
 enum
 {
 	MenuIdxRender,
+	MenuIdxTools,
 
 	MenuIdxMax
 };
@@ -35,5 +36,5 @@ enum
 {
 	UIE_BEGIN = Dui::EE_PRIVATE_BEGIN,
 
-	UIE_FUNCMENU_GETDISPINFO,
+	UIE_MENU_GETDISPINFO,
 };

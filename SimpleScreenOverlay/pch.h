@@ -8,6 +8,7 @@
 
 #include "eck\PchInc.h"
 #include "eck\CCommDlg.h"
+#include "eck\DuiStdCompositor.h"
 #include "eck\SystemHelper.h"
 #include "eck\MathHelper.h"
 #include "eck\CDuiListTemplate.h"

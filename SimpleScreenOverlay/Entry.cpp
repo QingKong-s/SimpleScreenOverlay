@@ -4,9 +4,10 @@
 
 #include "eck\Env.h"
 
+#if SSO_WINRT
 #pragma comment(lib, "CoreMessaging.lib")
 #pragma comment(lib, "RuntimeObject.lib")
-#pragma comment(lib, "d3dcompiler.lib")
+#endif
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ PWSTR pszCmdLine, _In_ int nCmdShow)
@@ -69,7 +70,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #else
 	pWnd->SetPresentMode(Dui::PresentMode::DCompositionSurface);
 #endif
-	pWnd->Create(nullptr, WS_POPUP, WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+	pWnd->Create(nullptr, WS_POPUP,
+		WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST |
+		WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
 		mi.rcWork.left, mi.rcWork.top,
 		(mi.rcWork.right - mi.rcWork.left),
 		(mi.rcWork.bottom - mi.rcWork.top),

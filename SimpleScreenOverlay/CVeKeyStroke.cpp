@@ -157,6 +157,7 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		rc.right = cxElem - d;
 		PaintUnit(rc, d, Key::MRight);
 
+		ECK_DUI_DBG_DRAW_FRAME;
 		EndPaint(ps);
 	}
 	return 0;

@@ -1,5 +1,5 @@
 ﻿#pragma once
-class CVeKeyStroke final : public Dui::CElem
+class CVeKeyStroke final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
 	enum class Key
@@ -28,6 +28,8 @@ private:
 	BOOLEAN m_bKeyDown[(size_t)Key::Max]{};
 	IDWriteTextLayout* m_pTl[(size_t)Key::Max]{};
 
+	BOOLEAN m_bLeft{ TRUE };
+
 	Key VkToKey(UINT vk);
 	UINT KeyToVk(Key eKey);
 
@@ -36,4 +38,11 @@ private:
 	void PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	void STDMETHODCALLTYPE Tick(int iMs) override { InvalidateRect(); }
+
+	BOOL STDMETHODCALLTYPE IsValid() override
+	{
+		return App->GetOpt().bRainbowColor && App->GetOpt().bKeyStroke;
+	}
 };

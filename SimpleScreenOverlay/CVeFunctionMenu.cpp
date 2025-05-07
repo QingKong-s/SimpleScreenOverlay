@@ -54,10 +54,8 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_NOTIFY:
 	{
-		const auto pnm = (Dui::DUINMHDR*)lParam;
-		if (pnm->uCode == UIE_MENU_GETDISPINFO &&
-			(WPARAM)&m_LV == wParam)
-			return GenElemNotify(pnm);
+		if ((WPARAM)&m_LV == wParam)
+			return GenElemNotify((Dui::DUINMHDR*)lParam);
 	}
 	break;
 

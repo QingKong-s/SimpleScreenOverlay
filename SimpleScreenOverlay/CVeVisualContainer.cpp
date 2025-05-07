@@ -54,9 +54,8 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			GetWnd()->Phy2Log(pt);
 			ClientToElem(pt);
 			m_ptCursor = { (float)pt.x, (float)pt.y };
-			/*if (!App->GetOpt().bImmdiateMode &&
-				(App->GetOpt().bCrosshair || App->GetOpt().bRuler || m_bShowSpotLight))
-				InvalidateRect();*/
+			if (!IsValid() && m_bShowSpotLight)
+				InvalidateRect();
 		}
 		//===窗口高亮
 		if (App->GetOpt().bWndHilight)
@@ -137,6 +136,14 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	SkipUpdateWndHilight:;
 	}
 	break;
+	case Notify::OptionsChanged:
+	{
+		ECK_DUILOCK;
+		const auto Opt = App->GetOpt();
+		m_bTimeLineActive = !!Opt.bCrosshair || !!Opt.bRuler || 
+			!!Opt.bWndHilight;
+	}
+	break;
 	}
 }
 
@@ -183,8 +190,8 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->SetPrimitiveBlend(eOldBlend);
 		}
 		//===准星线
-		m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
-		if (App->GetOpt().bCrosshair && App->GetOpt().bImmdiateMode)
+		m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
+		if (App->GetOpt().bCrosshair)
 		{
 			const auto d = App->GetOpt().dCrosshairCursorGap;
 			const auto cxLine = App->GetOpt().cxCrosshairLine;
@@ -222,11 +229,10 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		//===窗口高亮
-		if (App->GetOpt().bWndHilight && App->GetOpt().bImmdiateMode &&
-			m_hWndCursorAt)
+		if (App->GetOpt().bWndHilight && m_hWndCursorAt)
 		{
 			m_pDC->DrawRectangle(m_rcWndHili, m_pBrush, (float)VeCxWndHiliBorder);
-			if (m_TcWndTip.IsValid())
+			if (App->GetOpt().bWndTip && m_TcWndTip.IsValid())
 			{
 				D2D1::Matrix3x2F Mat;
 				m_pDC->GetTransform(&Mat);
@@ -325,13 +331,14 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		pTfWatermark->Release();
 
 		m_KeyStroke.Create(nullptr, Dui::DES_VISIBLE, 0,
-			10, 10, 150, 400, this);
+			VeCxKeyStrokeMargin, VeCyKeyStrokeMargin,
+			VeCxKeyStroke, VeCyKeyStroke, this);
 		m_KeyStroke.SetTextFormat(pTfKeyStroke);
 
 		eck::RCWH rcKs2;
 		rcKs2.cx = GetWidth() / 2;
 		rcKs2.x = (GetWidth() - rcKs2.cx) / 2;
-		rcKs2.cy = 240;
+		rcKs2.cy = VeCyKeyStroke2;
 		rcKs2.y = GetHeight() - rcKs2.cy - 10;
 		m_KeyStroke2.Create(nullptr, Dui::DES_VISIBLE, 0,
 			rcKs2.x, rcKs2.y, rcKs2.cx, rcKs2.cy, this);
@@ -384,4 +391,5 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 		m_ptWndTip.x = (m_ptWndTipSrc.x * (1.f - k)) + (m_ptWndTipDst.x * k);
 		m_ptWndTip.y = (m_ptWndTipSrc.y * (1.f - k)) + (m_ptWndTipDst.y * k);
 	}
+	InvalidateRect();
 }

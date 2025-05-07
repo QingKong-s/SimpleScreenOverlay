@@ -6,7 +6,7 @@ void CApp::Init()
 {
 	m_pTfCommon = eck::CreateDefTextFormatWithSize(14);
 
-	m_Opt.bImmdiateMode = 1;
+	m_Opt.bRainbowColor = 1;
 	m_Opt.bCrosshair = 0;
 	m_Opt.cxCrosshairLine = 1.f;
 	m_Opt.dCrosshairCursorGap = 20.f;
@@ -20,6 +20,7 @@ void CApp::Init()
 	m_Opt.rsWatermark = L"WATERMARK";
 	m_Opt.bWatermark = 1;
 	m_Opt.bKSGiveAWayToCursor = 1;
+	m_Opt.bWndTip = 1;
 }
 
 IDWriteTextFormat* CApp::CreateTextFormat(float fSize)

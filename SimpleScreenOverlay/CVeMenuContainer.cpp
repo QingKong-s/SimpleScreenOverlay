@@ -9,14 +9,16 @@ constexpr static PCWSTR MenuTitle[]
 
 enum class MRender
 {
+	RainbowColor,
 	Crosshair,
-	KeyStrokes,
-	KeyStrokes2,
+	KeyStroke,
+	KeyStroke2,
 	Time,
-	Spotlight,
+	SpotLight,
 	WindowHighlight,
 	WindowTip,
 	Ruler,
+	Watermark,
 };
 
 struct ITEM_DESC
@@ -27,14 +29,16 @@ struct ITEM_DESC
 
 constexpr static ITEM_DESC ItemRender[]
 {
+	{ L"彩虹色"sv, {} },
 	{ L"准星线"sv, L"在屏幕上显示准星线"sv },
-	{ L"按键显示"sv, L"显示按键输入"sv },
-	{ L"按键显示2"sv, L"显示按键输入2"sv },
+	{ L"按键显示"sv, L"显示游戏按键输入"sv },
+	{ L"按键显示2"sv, L"显示所有按键输入"sv },
 	{ L"时间"sv, L"显示时间"sv },
 	{ L"聚光灯"sv, L"双击Ctrl在光标位置显示一个光斑"sv },
-	{ L"窗口高亮"sv, L"在光标所在窗口的周围显示一个方块"sv },
+	{ L"窗口高亮"sv, L"在光标所在窗口的周围显示一个方框"sv },
 	{ L"窗口提示"sv, L"显示在光标所在窗口的详细信息"sv },
 	{ L"标尺"sv, L"显示标尺"sv },
+	{ L"水印"sv, L"在屏幕中央显示一个水印"sv }
 };
 constexpr static ITEM_DESC ItemTools[]
 {
@@ -65,38 +69,123 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_NOTIFY:
 	{
-		if (((Dui::DUINMHDR*)lParam)->uCode != UIE_MENU_GETDISPINFO)
-			break;
-		const auto p = (ML_DISPINFO*)lParam;
-		if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+		switch (((Dui::DUINMHDR*)lParam)->uCode)
 		{
-			p->pszText = ItemRender[p->idx].svText.data();
-			p->cchText = (int)ItemRender[p->idx].svText.size();
+		case UIE_MENU_GETDISPINFO:
+		{
+			const auto p = (ML_DISPINFO*)lParam;
+			if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+			{
+				p->pszText = ItemRender[p->idx].svText.data();
+				p->cchText = (int)ItemRender[p->idx].svText.size();
+			}
+			else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam)
+			{
+				p->pszText = ItemTools[p->idx].svText.data();
+				p->cchText = (int)ItemTools[p->idx].svText.size();
+			}
 		}
-		else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam)
+		return 0;
+		case Dui::LTE_ITEMCHANED:
 		{
-			p->pszText = ItemTools[p->idx].svText.data();
-			p->cchText = (int)ItemTools[p->idx].svText.size();
+			const auto p = (Dui::LTN_ITEMCHANGE*)lParam;
+			auto& Opt = App->GetOpt();
+			const auto bSel = !!(p->uFlagsNew & Dui::LEIF_SELECTED);
+			if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+			{
+				switch ((MRender)p->idx)
+				{
+				case MRender::RainbowColor:	Opt.bRainbowColor = bSel;	break;
+				case MRender::Crosshair:	Opt.bCrosshair = bSel;		break;
+				case MRender::KeyStroke:	Opt.bKeyStroke = bSel;		break;
+				case MRender::KeyStroke2:	Opt.bKeyStroke2 = bSel;		break;
+				case MRender::Time:			Opt.bTime = bSel;			break;
+				case MRender::SpotLight:	Opt.bSpotLight = bSel;		break;
+				case MRender::WindowHighlight:	Opt.bWndHilight = bSel;	break;
+				case MRender::WindowTip:	Opt.bWndTip = bSel;			break;
+				case MRender::Ruler:		Opt.bRuler = bSel;			break;
+				case MRender::Watermark:	Opt.bWatermark = bSel;		break;
+				}
+				SSONOTIFY n{};
+				App->GetSignal().Emit(Notify::OptionsChanged, n);
+			}
+			else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam &&
+				(p->uFlagsNew ^ p->uFlagsOld))
+			{
+			}
+		}
+		return 0;
 		}
 	}
 	return 0;
 
+	case WM_STYLECHANGED:
+	{
+		if ((wParam ^ lParam) & Dui::DES_VISIBLE)
+		{
+			if (lParam & Dui::DES_VISIBLE)
+			{
+				m_bTimeLineActive = TRUE;
+				GetWnd()->WakeRenderThread();
+			}
+			else
+				m_bTimeLineActive = FALSE;
+		}
+	}
+	break;
+
 	case WM_CREATE:
 	{
-		int x = 120;
-		for (size_t i{}; auto & e : m_MenuBox)
+		int x = (GetWidth() -
+			((VeCxFuncMenu + 20) * ARRAYSIZE(m_MenuBox))) / 2;
+		constexpr auto y = 400;
+		for (size_t i{}; auto& e : m_MenuBox)
 		{
 			e.Create(MenuTitle[i], Dui::DES_VISIBLE, 0,
-				x, 140, VeCxFuncMenu, 400, this);
+				x, y, VeCxFuncMenu, 400, this);
 			x += (VeCxFuncMenu + 10);
 			++i;
 		}
-		m_MenuBox[MenuIdxRender].GetMenuList().SetItemCount(ARRAYSIZE(ItemRender));
+		auto& MenuRender = m_MenuBox[MenuIdxRender].GetMenuList();
+		auto& MenuTools = m_MenuBox[MenuIdxTools].GetMenuList();
+		MenuRender.SetItemCount(ARRAYSIZE(ItemRender));
 		m_MenuBox[MenuIdxRender].ReCalcIdealSize();
-		m_MenuBox[MenuIdxTools].GetMenuList().SetItemCount(ARRAYSIZE(ItemTools));
+		MenuTools.SetItemCount(ARRAYSIZE(ItemTools));
 		m_MenuBox[MenuIdxTools].ReCalcIdealSize();
+		const auto& Opt = App->GetOpt();
+		if (Opt.bRainbowColor)
+			MenuRender.SetItemState((int)MRender::RainbowColor, Dui::LEIF_SELECTED);
+		if (Opt.bCrosshair)
+			MenuRender.SetItemState((int)MRender::Crosshair, Dui::LEIF_SELECTED);
+		if (Opt.bKeyStroke)
+			MenuRender.SetItemState((int)MRender::KeyStroke, Dui::LEIF_SELECTED);
+		if (Opt.bKeyStroke2)
+			MenuRender.SetItemState((int)MRender::KeyStroke2, Dui::LEIF_SELECTED);
+		if (Opt.bTime)
+			MenuRender.SetItemState((int)MRender::Time, Dui::LEIF_SELECTED);
+		if (Opt.bSpotLight)
+			MenuRender.SetItemState((int)MRender::SpotLight, Dui::LEIF_SELECTED);
+		if (Opt.bWndHilight)
+			MenuRender.SetItemState((int)MRender::WindowHighlight, Dui::LEIF_SELECTED);
+		if (Opt.bWndTip)
+			MenuRender.SetItemState((int)MRender::WindowTip, Dui::LEIF_SELECTED);
+		if (Opt.bRuler)
+			MenuRender.SetItemState((int)MRender::Ruler, Dui::LEIF_SELECTED);
+		if (Opt.bWatermark)
+			MenuRender.SetItemState((int)MRender::Watermark, Dui::LEIF_SELECTED);
+		GetWnd()->RegisterTimeLine(this);
 	}
 	break;
+
+	case WM_DESTROY:
+		GetWnd()->UnregisterTimeLine(this);
+		break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
+}
+
+void STDMETHODCALLTYPE CVeMenuContainer::Tick(int iMs)
+{
+	for (auto& e : m_MenuBox)
+		e.InvalidateRect();
 }

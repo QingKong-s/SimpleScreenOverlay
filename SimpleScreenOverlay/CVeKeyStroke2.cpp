@@ -261,7 +261,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(Clear)"sv,
 };
 
-constexpr float FadeInOutAnDuration = 2600.f;
+constexpr float FadeInOutAnDuration = 2000.f;
 constexpr float RePosAnDuration = 1000.f;
 constexpr float JumpAnDuration = 300.f;
 
@@ -272,6 +272,8 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	case Notify::GlobalKeyDown:
 	case Notify::GlobalMouseDown:
 	{
+		if (!App->GetOpt().bKeyStroke2)
+			break;
 		ECK_DUILOCK;
 		IkOnKeyDown(n.Vk);
 	}
@@ -279,18 +281,38 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	case Notify::GlobalKeyUp:
 	case Notify::GlobalMouseUp:
 	{
+		if (!App->GetOpt().bKeyStroke2)
+			break;
 		ECK_DUILOCK;
 		IkOnKeyUp(n.Vk);
 	}
 	break;
 	case Notify::GlobalMouseMove:
 	{
+		if (!App->GetOpt().bKeyStroke2)
+			break;
 		ECK_DUILOCK;
 		auto pt{ n.pt };
 		ScreenToClient(GetWnd()->HWnd, &pt);
 		GetWnd()->Phy2Log(pt);
 		ClientToElem(pt);
 		IkOnMouseMove(pt);
+	}
+	break;
+	case Notify::OptionsChanged:
+	{
+		ECK_DUILOCK;
+		m_bRainbow = App->GetOpt().bRainbowColor;
+		SetVisible(App->GetOpt().bKeyStroke2);
+		if (App->GetOpt().bKeyStroke2)
+			SetTimer(IDT_KEYSTROKE2, TE_KEYSTROKE2);
+		else
+		{
+			m_vItem.clear();
+			KillTimer(IDT_KEYSTROKE2);
+		}
+		if (m_bRainbow)
+			GetWnd()->WakeRenderThread();
 	}
 	break;
 	}
@@ -332,6 +354,11 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		it->x = it->xSrc;
 		it->y = it->ySrc;
 		IkpBeginRePos();
+		ActivateTimeLine();
+	}
+	else
+	{
+		InvalidateRect();
 	}
 }
 
@@ -342,6 +369,7 @@ void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
 	if (it == m_vItem.end())
 		return;
 	it->uFlags &= ~KIF_KEYDOWN;
+	InvalidateRect();
 }
 
 void CVeKeyStroke2::IkpBeginRePos()
@@ -367,6 +395,7 @@ void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
 {
 	D2D1_POINT_2F pt{ eck::MakeD2dPtF(pt_) };
 	D2D1_RECT_F rc;
+	BOOL bAn{};
 	for (size_t i{}; auto& e : m_vItem)
 	{
 		if (e.eState == ItemState::None ||
@@ -377,7 +406,10 @@ void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
 			rc.right = rc.left + m_cxyBlock;
 			rc.bottom = rc.top + m_cxyBlock;
 			if (eck::PtInRect(rc, pt))
+			{
+				bAn = TRUE;
 				IkpBeginJump(e);
+			}
 		}
 		else if (e.eState == ItemState::Jump ||
 			e.eState == ItemState::Jumped)
@@ -386,10 +418,15 @@ void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
 			rc.right = rc.left + m_cxyBlock;
 			rc.bottom = rc.top + m_cxyBlock;
 			if (!eck::PtInRect(rc, pt))
+			{
+				bAn = TRUE;
 				IkpCancelJump(e);
+			}
 		}
 		++i;
 	}
+	if (bAn)
+		ActivateTimeLine();
 }
 
 void CVeKeyStroke2::IkpBeginJump(ITEM& e)
@@ -408,6 +445,37 @@ void CVeKeyStroke2::IkpCancelJump(ITEM& e)
 	e.msTime = 0;
 }
 
+void CVeKeyStroke2::IkpTickKey()
+{
+	ECK_DUILOCK;
+	BOOL bDel{};
+	const auto ullTick = NtGetTickCount64();
+	for (size_t i = m_vItem.size(); i; --i)
+	{
+		auto& e = m_vItem[i - 1];
+		if (e.eState != ItemState::FadeIn &&
+			!(e.uFlags & KIF_KEYDOWN))
+		{
+			e.msRemain -= TE_KEYSTROKE2;
+			if (e.msRemain <= 0)
+			{
+				bDel = TRUE;
+				m_vItem.erase(m_vItem.begin() + i - 1);
+			}
+		}
+	}
+	if (bDel)
+	{
+		if (m_vItem.empty())
+			InvalidateRect();
+		else
+		{
+			IkpBeginRePos();
+			ActivateTimeLine();
+		}
+	}
+}
+
 LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -417,7 +485,6 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
 
-		m_pBrushForegnd->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
 		D2D1_RECT_F rcBlock;
 		for (auto& e : m_vItem)
 		{
@@ -431,6 +498,13 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		EndPaint(ps);
 	}
 	break;
+
+	case WM_TIMER:
+	{
+		if (wParam == IDT_KEYSTROKE2)
+			IkpTickKey();
+	}
+	return 0;
 
 	case WM_SIZE:
 	{
@@ -449,6 +523,10 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;
+
+	case WM_DESTROY:
+		GetWnd()->UnregisterTimeLine(this);
+		break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
@@ -459,13 +537,15 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		return;
 	float xFinal, yFinal;
 	CalcKeyItemNormalPos(0, xFinal, yFinal);
-	BOOL bDelayDelete{};
+	BOOL bActive{};
 	EckCounter(m_vItem.size(), i)
 	{
 		auto& e = m_vItem[i];
 		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos ||
 			e.eState == ItemState::Restore)
 		{
+			if (e.eState == ItemState::RePos)
+				EckDbgPrint("RePos");
 			e.msTime += iMs;
 			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f,
 				(e.eState == ItemState::FadeIn) ? FadeInOutAnDuration :
@@ -487,6 +567,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 			{
 				e.x = e.xSrc + (xFinal - e.xSrc) * k;
 				e.y = e.ySrc + (yFinal - e.ySrc) * k;
+				bActive = TRUE;
 			}
 		}
 		else if (e.eState == ItemState::Jump)
@@ -504,31 +585,13 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 			{
 				e.x = e.xSrc + (xDst - e.xSrc) * k;
 				e.y = e.ySrc + (yDst - e.ySrc) * k;
-			}
-		}
-
-		if (e.eState != ItemState::FadeIn &&
-			e.eState != ItemState::Deleted)
-		{
-			if ((e.msRemain -= iMs) <= 0)
-			{
-				e.xSrc = e.x;
-				e.ySrc = e.y;
-				e.eState = ItemState::Deleted;
-				e.msTime = 0;
-				e.fOpacity = 1.f;
-				bDelayDelete = TRUE;
+				bActive = TRUE;
 			}
 		}
 		xFinal += (m_cxyBlock + (float)VeCxyKeyStroke2Padding);
 	}
-	if (bDelayDelete)
-	{
-		for (size_t i = m_vItem.size(); i; --i)
-			if (m_vItem[i - 1].eState == ItemState::Deleted)
-				m_vItem.erase(m_vItem.begin() + i - 1);
-		IkpBeginRePos();
-	}
+	InvalidateRect();
+	m_bAnimating = bActive;
 }
 
 void CVeKeyStroke2::CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y)
@@ -542,29 +605,25 @@ void CVeKeyStroke2::CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float
 
 void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 {
-	BOOL bDown;
-	if (App->GetOpt().bImmdiateMode)
-		bDown = (GetAsyncKeyState(e.Vk) & 0x8000);
-	else
-		bDown = (e.uFlags & KIF_KEYDOWN);
-
 	D2D1_COLOR_F crBkg, crForegnd;
-	if (bDown)
+	if (e.uFlags & KIF_KEYDOWN)
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkgPressed);
 	else
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkg);
+	if (m_bRainbow)
+		crForegnd = CalcRainbowColorWithStep(
+			NtGetTickCount64(), int(&e - &m_vItem[0]) * 8);
+	else
+		crForegnd = App->GetColor(CApp::CrDefKeyStroke);
 	if (e.eState == ItemState::FadeIn)
 	{
 		crBkg.a *= e.fOpacity;
-		crForegnd = m_pBrushForegnd->GetColor();
-		const auto OldA = crForegnd.a;
 		crForegnd.a *= e.fOpacity;
-		m_pBrushForegnd->SetColor(crForegnd);
-		crForegnd.a = OldA;
 	}
+	m_pBrushForegnd->SetColor(crForegnd);
 	m_pBrush->SetColor(crBkg);
-
 	m_pDC->FillRectangle(rc, m_pBrush);
+
 	if (!e.pTextLayout)
 	{
 		eck::g_pDwFactory->CreateTextLayout(KeyName[e.Vk].data(),
@@ -597,9 +656,6 @@ void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 			m_pDC->SetTransform(MatOld);
 	}
 	m_pDC->DrawRectangle(rc, m_pBrushForegnd, cxLine);
-
-	if (e.eState == ItemState::FadeIn)
-		m_pBrushForegnd->SetColor(crForegnd);
 }
 
 void CVeKeyStroke2::CalcCenterBottomPos(_Out_ float& x, _Out_ float& y)

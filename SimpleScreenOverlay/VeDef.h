@@ -8,12 +8,16 @@ enum
 	VeCyFuncMenuItem = 30,
 	VeCyFuncMenuItemPadding = 1,
 
+	VeCxKeyStrokeMargin = 16,
+	VeCyKeyStrokeMargin = 16,
+	VeCxKeyStroke = 150,
+	VeCyKeyStroke = 320,
+	VeCyKeyStroke2 = 240,
 	VeCxyKeyStrokePadding = 8,
 	VeCxyKeyStroke2Padding = 6,
 	VeCyKeyStrokeMouseBtnPadding = VeCxyKeyStrokePadding * 5,
 	VeCyKeyStrokeSpaceBtn = 24,
 	VeCyKeyStrokeMouseBtn = 24,
-	VeCxKeyStrokeCachePadding = 2,
 	VeCxKeyStrokeBorder = 1,
 
 	VeCxWndHiliBorder = 2,
@@ -37,4 +41,10 @@ enum
 	UIE_BEGIN = Dui::EE_PRIVATE_BEGIN,
 
 	UIE_MENU_GETDISPINFO,
+};
+
+enum
+{
+	IDT_BEGIN = 0x514B,
+	IDT_KEYSTROKE2,
 };

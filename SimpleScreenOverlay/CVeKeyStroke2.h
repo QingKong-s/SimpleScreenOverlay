@@ -2,8 +2,13 @@
 class CVeKeyStroke2 final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
+	enum
+	{
+		TE_KEYSTROKE2 = 150,
+	};
+
 	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数
-	constexpr static int StayMillSecInit = 1000;// 第一次显示的毫秒数
+	constexpr static int StayMillSecInit = 1600;// 第一次显示的毫秒数
 	enum class ItemState : BYTE
 	{
 		None,	// 正常
@@ -12,7 +17,6 @@ private:
 		Jump,	// 避让光标，正在播放向上移动动画
 		Jumped,	// 已避让光标
 		Restore,// 取消避让光标，正在播放恢复动画
-		Deleted,// 应删除
 	};
 	enum : BYTE
 	{
@@ -42,7 +46,8 @@ private:
 	ID2D1SolidColorBrush* m_pBrushForegnd{};
 	std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序
 	float m_cxyBlock{};
-	BOOL m_bIdle{ 0 };
+	BOOLEAN m_bAnimating{};
+	BOOLEAN m_bRainbow{};
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
@@ -60,11 +65,14 @@ private:
 
 	void IkpCancelJump(ITEM& e);
 
-	void ChangeIdleState(BOOL bIdle, BOOL bWakeRenderThread = TRUE)
+	void IkpTickKey();
+
+	void ActivateTimeLine()
 	{
-		m_bIdle = bIdle;
-		if (m_bIdle && bWakeRenderThread)
-			GetWnd()->WakeRenderThread();
+		if (m_bAnimating)
+			return;
+		m_bAnimating = TRUE;
+		GetWnd()->WakeRenderThread();
 	}
 
 	void CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y);
@@ -76,5 +84,5 @@ public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid() { return !m_bIdle; }
+	BOOL STDMETHODCALLTYPE IsValid() { return m_bAnimating; }
 };

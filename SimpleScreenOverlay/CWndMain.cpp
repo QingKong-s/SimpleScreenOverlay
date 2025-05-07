@@ -1,29 +1,6 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
 
-void HSV2RGB(float h, float s, float v, float& r, float& g, float& b)
-{
-	const int i = int(h * 6);
-	const float f = h * 6 - i;
-	const float p = v * (1 - s);
-	const float q = v * (1 - f * s);
-	const float t = v * (1 - (1 - f) * s);
-	float rf, gf, bf;
-
-	switch (i % 6)
-	{
-	case 0: rf = v; gf = t; bf = p; break;
-	case 1: rf = q; gf = v; bf = p; break;
-	case 2: rf = p; gf = v; bf = t; break;
-	case 3: rf = p; gf = q; bf = v; break;
-	case 4: rf = t; gf = p; bf = v; break;
-	case 5: rf = v; gf = p; bf = q; break;
-	default: ECK_UNREACHABLE;
-	}
-	r = rf;
-	g = gf;
-	b = bf;
-}
 
 BOOL CWndMain::InitRawInput()
 {
@@ -136,7 +113,9 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 			m_bKeyDown[ri.data.keyboard.VKey] = TRUE;
 			eNotify[cEvt] = Notify::GlobalKeyDown;
 			n[cEvt].Vk = ri.data.keyboard.VKey;
-			if (!n[cEvt].bRepeat && (
+			const auto bRepeat = n[cEvt].bRepeat;
+			++cEvt;
+			if (!bRepeat && (
 				ri.data.keyboard.VKey == VK_CONTROL ||
 				ri.data.keyboard.VKey == VK_LCONTROL ||
 				ri.data.keyboard.VKey == VK_RCONTROL))
@@ -145,15 +124,15 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 				if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime())
 				{
 					eNotify[cEvt] = Notify::DoubleCtrl;
+					n[cEvt].bRepeat = TRUE;
 					++cEvt;
 				}
 				m_dwLastCtrlTick = NtGetTickCount64();
 			}
 			if (ri.data.keyboard.VKey == VK_F7)
-			{
+			{// HACK
 				SwitchMenuShowing(!m_bShowMenu);
 			}
-			++cEvt;
 		}
 		if (ri.data.keyboard.Message == WM_KEYUP ||
 			ri.data.keyboard.Message == WM_SYSKEYUP)
@@ -231,6 +210,9 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			0, 0, pt.x, pt.y, nullptr, this);
 		m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
 		RegisterTimeLine(this);
+
+		SSONOTIFY n{};
+		App->GetSignal().Emit(Notify::OptionsChanged, n);
 		return lResult;
 	}
 	return 0;
@@ -295,20 +277,15 @@ void CWndMain::Tick(int iMs)
 			}
 			m_MenuContainer.SetCompositor(nullptr);
 			m_bMenuAn = FALSE;
+			Redraw();
 			return;
 		}
 		m_pCompMenuSwitch->Opacity = k;
-		const auto cyScr = GetClientHeight();
-		m_pCompMenuSwitch->Dy = int(-(cyScr / 3.f) * (1.f - k));
+		const auto cyScr = GetClientHeightLog();
+		m_pCompMenuSwitch->Dy = int(-(cyScr / 6.f) * (1.f - k));
 		m_MenuContainer.CompReCalcCompositedRect();
-		//m_MenuContainer.InvalidateRect();
+		Redraw();
 	}
-
-	m_fHue += 0.002f;
-	if (m_fHue >= 1.f)
-		m_fHue -= 1.f;
-	HSV2RGB(m_fHue, 1.f, 1.f, m_crAnimation.r, m_crAnimation.g, m_crAnimation.b);
-	Redraw();
 }
 
 void CWndMain::SwitchMenuShowing(BOOL bShow)

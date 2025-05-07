@@ -41,6 +41,8 @@ private:
 
 	CGrTextCache m_TcWatermark{};
 
+	BOOLEAN m_bTimeLineActive{ TRUE };
+
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
 	void CalcWindowTipPos(const D2D1_RECT_F& rcWnd, _Out_ D2D1_POINT_2F& ptTip);
@@ -48,4 +50,9 @@ public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void STDMETHODCALLTYPE Tick(int iMs);
+
+	BOOL STDMETHODCALLTYPE IsValid()
+	{
+		return m_bTimeLineActive || m_bSpotLightAnimating;
+	}
 };

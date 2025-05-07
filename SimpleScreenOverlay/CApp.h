@@ -8,6 +8,7 @@ enum class Notify
 	GlobalMouseUp,		// Vk
 	DoubleCtrl,			// 
 	GlobalMouseMove,	// pt
+	OptionsChanged,		//
 };
 
 struct SSONOTIFY
@@ -79,7 +80,7 @@ public:
 private:
 	struct OPT
 	{
-		BOOLEAN bImmdiateMode;
+		BOOLEAN bRainbowColor;
 		BOOLEAN bCrosshair;
 		BOOLEAN bKeyStroke;
 		BOOLEAN bKeyStroke2;
@@ -89,6 +90,8 @@ private:
 		BOOLEAN bRuler;
 		BOOLEAN bWatermark;
 		BOOLEAN bKSGiveAWayToCursor;
+		BOOLEAN bTime;
+		BOOLEAN bWndTip{};
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;

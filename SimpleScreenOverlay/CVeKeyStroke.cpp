@@ -37,56 +37,100 @@ UINT CVeKeyStroke::KeyToVk(Key eKey)
 
 void CVeKeyStroke::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 {
-	if (App->GetOpt().bImmdiateMode)
-		return;
 	Key idx;
 	switch (eNotify)
 	{
 	case Notify::GlobalKeyDown:
+	{
+		if (!App->GetOpt().bKeyStroke)
+			break;
 		idx = VkToKey(n.Vk);
 		if (idx == Key::Max)
 			return;
+		ECK_DUILOCK;
 		m_bKeyDown[(size_t)idx] = TRUE;
 		InvalidateRect();
-		break;
+	}
+	break;
 	case Notify::GlobalKeyUp:
+	{
+		if (!App->GetOpt().bKeyStroke)
+			break;
 		idx = VkToKey(n.Vk);
 		if (idx == Key::Max)
 			return;
+		ECK_DUILOCK;
 		m_bKeyDown[(size_t)idx] = FALSE;
 		InvalidateRect();
-		break;
+	}
+	break;
 	case Notify::GlobalMouseDown:
+	{
+		if (!App->GetOpt().bKeyStroke)
+			break;
 		if (n.Vk == VK_LBUTTON)
 			idx = Key::MLeft;
 		else if (n.Vk == VK_RBUTTON)
 			idx = Key::MRight;
 		else
 			break;
+		ECK_DUILOCK;
 		m_bKeyDown[(size_t)idx] = TRUE;
 		InvalidateRect();
-		break;
+	}
+	break;
 	case Notify::GlobalMouseUp:
+	{
+		if (!App->GetOpt().bKeyStroke)
+			break;
 		if (n.Vk == VK_LBUTTON)
 			idx = Key::MLeft;
 		else if (n.Vk == VK_RBUTTON)
 			idx = Key::MRight;
 		else
 			break;
+		ECK_DUILOCK;
 		m_bKeyDown[(size_t)idx] = FALSE;
 		InvalidateRect();
-		break;
+	}
+	break;
+	case Notify::GlobalMouseMove:
+	{
+		POINT pt{ n.pt };
+		ScreenToClient(GetWnd()->HWnd, &pt);
+		GetWnd()->Phy2Log(pt);
+		if (eck::PtInRect(GetRectInClient(), pt))
+			if (m_bLeft)
+			{
+				m_bLeft = FALSE;
+				SetPos(
+					GetParentElem()->GetWidth() - GetWidth() - VeCxKeyStrokeMargin,
+					GetRect().top);
+			}
+		else
+			if (!m_bLeft)
+			{
+				m_bLeft = TRUE;
+				SetPos(VeCxKeyStrokeMargin, GetRect().top);
+			}
+	}
+	break;
+	case Notify::OptionsChanged:
+	{
+		ECK_DUILOCK;
+		SetVisible(App->GetOpt().bKeyStroke);
+		if (!App->GetOpt().bKeyStroke)
+			memset(m_bKeyDown, 0, sizeof(m_bKeyDown));
+		if (App->GetOpt().bRainbowColor)
+			GetWnd()->WakeRenderThread();
+	}
+	break;
 	}
 }
 
 void CVeKeyStroke::PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey)
 {
-	BOOL bDown;
-	if (App->GetOpt().bImmdiateMode)
-		bDown = (GetAsyncKeyState(KeyToVk(eKey)) & 0x8000);
-	else
-		bDown = m_bKeyDown[(size_t)eKey];
-	if (bDown)
+	if (m_bKeyDown[(size_t)eKey])
 		m_pBrush->SetColor(App->GetColor(CApp::CrKeyStrokeBkgPressed));
 	else
 		m_pBrush->SetColor(App->GetColor(CApp::CrKeyStrokeBkg));
@@ -102,14 +146,14 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_PAINT:
 	{
-		if (!App->GetOpt().bKeyStroke || !m_pTl[0])
+		if (!m_pTl[0])
 			return 0;
 
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
 
-		if (App->GetOpt().bImmdiateMode)
-			m_pBrushForegnd->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
+		if (App->GetOpt().bRainbowColor)
+			m_pBrushForegnd->SetColor(CalcRainbowColor(NtGetTickCount64()));
 		else
 			m_pBrushForegnd->SetColor(App->GetColor(CApp::CrDefKeyStroke));
 
@@ -216,11 +260,14 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pDC->CreateSolidColorBrush(App->GetColor(CApp::CrKeyStrokeBkg), &m_pBrush);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrushForegnd);
 		App->GetSignal().Connect(this, &CVeKeyStroke::OnAppEvent);
+		GetWnd()->RegisterTimeLine(this);
 	}
 	break;
 	case WM_DESTROY:
 	{
 		SafeRelease(m_pBrush);
+		SafeRelease(m_pBrushForegnd);
+		GetWnd()->UnregisterTimeLine(this);
 	}
 	break;
 	}

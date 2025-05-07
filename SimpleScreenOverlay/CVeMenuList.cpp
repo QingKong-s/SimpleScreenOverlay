@@ -11,8 +11,8 @@ void CVeMenuList::LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint)
 	GetItemRect(idx, rcItem);
 	eck::IntersectRect(rcFill, rcItem, rcPaint);
 	if (GetItemState(idx) & Dui::LEIF_SELECTED)
-		if (App->GetOpt().bImmdiateMode)
-			m_pBrush->SetColor(((CWndMain*)GetWnd())->GetCurrAnColor());
+		if (App->GetOpt().bRainbowColor)
+			m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
 		else
 			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuHotSelected));
 	else
@@ -40,9 +40,9 @@ SkipFill:
 
 	if (e.pLayout.Get())
 	{
-		if (App->GetOpt().bImmdiateMode)
+		if (App->GetOpt().bRainbowColor)
 		{
-			auto cr{ ((CWndMain*)GetWnd())->GetCurrAnColor() };
+			auto cr{ CalcRainbowColor(NtGetTickCount64()) };
 			cr.r = 1.f - cr.r;
 			cr.g = 1.f - cr.g;
 			cr.b = 1.f - cr.b;

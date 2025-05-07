@@ -10,9 +10,6 @@ private:
 	CVeMenuContainer m_MenuContainer{};
 	CVeVisualContainer m_VisualContainer{};
 
-	D2D1_COLOR_F m_crAnimation{ .a = 1.f };
-	float m_fHue{};
-
 	float m_msMenuAn{};
 	Dui::CCompositorPageAn* m_pCompMenuSwitch{};
 
@@ -21,7 +18,6 @@ private:
 
 	BITBOOL m_bShowMenu : 1{};
 	BITBOOL m_bMenuAn : 1{};
-	BITBOOL m_bTimeLineActive : 1{ TRUE };
 
 #if SSO_WINRT
 	IInteropCompositorFactoryPartner* m_pInteropFactory{};
@@ -48,9 +44,7 @@ public:
 
 	void STDMETHODCALLTYPE Tick(int iMs);
 
-	BOOL STDMETHODCALLTYPE IsValid() { return m_bTimeLineActive; }
-
-	EckInlineNdCe const auto& GetCurrAnColor() const { return m_crAnimation; }
+	BOOL STDMETHODCALLTYPE IsValid() { return m_bMenuAn; }
 
 	void SwitchMenuShowing(BOOL bShow);
 };

@@ -2,7 +2,7 @@
 #include "CVeKeyStroke.h"
 #include "CVeKeyStroke2.h"
 
-class CVeVisualContainer final : public Dui::CElem, public CFixTimeLine
+class CVeVisualContainer final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
 	constexpr static float SpotLightGenRadius = 40.f;

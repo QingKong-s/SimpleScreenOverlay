@@ -2,7 +2,7 @@
 #include "CVeMenuContainer.h"
 #include "CVeVisualContainer.h"
 
-class CWndMain final : public Dui::CDuiWnd, public CFixTimeLine
+class CWndMain final : public Dui::CDuiWnd, public eck::CFixedTimeLine
 {
 private:
 	eck::THREADCTX* m_ptcUiThread{};

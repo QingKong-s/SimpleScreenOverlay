@@ -63,9 +63,6 @@
     <ClInclude Include="CVeKeyStroke2.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="CFixTimeLine.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="CGrTextCache.h">
       <Filter>Graphics</Filter>
     </ClInclude>

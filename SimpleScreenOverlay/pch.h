@@ -45,5 +45,4 @@ using namespace Windows::UI::Composition::Desktop;
 #endif
 
 #include "CApp.h"
-#include "CFixTimeLine.h"
 #include "CGrTextCache.h"

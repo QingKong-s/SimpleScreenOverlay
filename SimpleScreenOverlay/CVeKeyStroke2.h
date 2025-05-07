@@ -1,5 +1,5 @@
 ﻿#pragma once
-class CVeKeyStroke2 final : public Dui::CElem, public CFixTimeLine
+class CVeKeyStroke2 final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
 	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数

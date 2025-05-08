@@ -48,7 +48,6 @@ private:
 	std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序
 	float m_cxyBlock{};
 	BOOLEAN m_bAnimating{};
-	BOOLEAN m_bRainbow{};
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
@@ -85,5 +84,8 @@ public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid() { return m_bAnimating; }
+	BOOL STDMETHODCALLTYPE IsValid()
+	{
+		return (m_bAnimating || App->GetOpt().bRainbowColor) && !m_vItem.empty();
+	}
 };

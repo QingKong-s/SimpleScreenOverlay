@@ -302,7 +302,6 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	case Notify::OptionsChanged:
 	{
 		ECK_DUILOCK;
-		m_bRainbow = App->GetOpt().bRainbowColor;
 		SetVisible(App->GetOpt().bKeyStroke2);
 		if (App->GetOpt().bKeyStroke2)
 			SetTimer(IDT_KEYSTROKE2, TE_KEYSTROKE2);
@@ -311,7 +310,7 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			m_vItem.clear();
 			KillTimer(IDT_KEYSTROKE2);
 		}
-		if (m_bRainbow)
+		if (App->GetOpt().bRainbowColor)
 			GetWnd()->WakeRenderThread();
 	}
 	break;
@@ -549,8 +548,6 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		if (e.eState == ItemState::FadeIn || e.eState == ItemState::RePos ||
 			e.eState == ItemState::Restore)
 		{
-			if (e.eState == ItemState::RePos)
-				EckDbgPrint("RePos");
 			e.msTime += iMs;
 			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f,
 				(e.eState == ItemState::FadeIn) ? FadeInOutAnDuration :
@@ -595,7 +592,20 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		}
 		xFinal += (m_cxyBlock + (float)VeCxyKeyStroke2Padding);
 	}
-	InvalidateRect();
+	if (m_bAnimating)
+		InvalidateRect();
+	else if (!m_vItem.empty())// 没有动画运行，仅为彩虹色更新
+	{
+		const auto cxMax = m_cxyBlock * m_vItem.size() +
+			(float)VeCxyKeyStroke2Padding * (m_vItem.size() - 1);
+		RECT rc;
+		rc.left = (GetWidth() - cxMax) / 2;
+		rc.top = 0;
+		rc.right = rc.left + cxMax;
+		rc.bottom = GetHeight();
+		ElemToClient(rc);
+		InvalidateRect(rc);
+	}
 	m_bAnimating = bActive;
 }
 
@@ -615,7 +625,7 @@ void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkgPressed);
 	else
 		crBkg = App->GetColor(CApp::CrKeyStrokeBkg);
-	if (m_bRainbow)
+	if (App->GetOpt().bRainbowColor)
 		crForegnd = CalcRainbowColorWithStep(
 			NtGetTickCount64(), int(&e - &m_vItem[0]) * 8);
 	else

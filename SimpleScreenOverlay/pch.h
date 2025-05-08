@@ -4,7 +4,7 @@
 
 #define _CRTDBG_MAP_ALLOC 1
 
-#define SSO_WINRT 0
+#define SSO_WINRT 1
 
 #include "eck\PchInc.h"
 #include "eck\CCommDlg.h"
@@ -25,8 +25,6 @@
 #include <winrt/Windows.UI.Composition.Effects.h>
 #endif
 
-#include <d2d1effectauthor.h>
-#include <d3dcompiler.h>
 #include <d2d1_2.h>
 #include <dwrite_1.h>
 

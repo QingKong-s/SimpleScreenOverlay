@@ -107,6 +107,8 @@ private:
 
 	eck::CSignal<eck::NoIntercept_T, void, Notify, SSONOTIFY&> m_Sig{};
 public:
+	using HSlot = decltype(m_Sig)::HSlot;
+
 	void Init();
 
 	EckInlineNdCe const auto& GetColor(int idx)

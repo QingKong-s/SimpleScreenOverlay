@@ -5,8 +5,8 @@ enum
 	VeCxFuncMenu = 130,
 	VeCyFuncMenuTitle = 26,
 	VeCyFuncMenuFooter = 16,
-	VeCyFuncMenuItem = 30,
-	VeCyFuncMenuItemPadding = 1,
+	VeCyFuncMenuItem = 24,
+	VeCyFuncMenuItemPadding = 0,
 
 	VeCxKeyStrokeMargin = 16,
 	VeCyKeyStrokeMargin = 16,
@@ -30,6 +30,7 @@ enum
 
 enum
 {
+	MenuIdxProgram,
 	MenuIdxRender,
 	MenuIdxTools,
 

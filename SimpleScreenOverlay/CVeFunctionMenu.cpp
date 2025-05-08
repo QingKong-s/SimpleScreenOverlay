@@ -34,8 +34,8 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pTextLayout->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		}
 		if (m_pTextLayout)
-		m_pDC->DrawTextLayout({ 0,0 }, m_pTextLayout, m_pBrush,
-			Dui::DrawTextLayoutFlags);
+			m_pDC->DrawTextLayout({ 0,0 }, m_pTextLayout, m_pBrush,
+				Dui::DrawTextLayoutFlags);
 
 		EndPaint(ps);
 	}
@@ -106,7 +106,7 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		m_LV.Create(nullptr, Dui::DES_VISIBLE, 0,
-			0, 0, 10,10, this);
+			0, 0, 10, 10, this);
 		m_LV.SetItemHeight(VeCyFuncMenuItem);
 		m_LV.SetItemPadding(VeCyFuncMenuItemPadding);
 
@@ -127,7 +127,7 @@ void CVeFunctionMenu::ReCalcIdealSize()
 {
 	auto cyList = m_LV.GetItemCount() *
 		(VeCyFuncMenuItem + VeCyFuncMenuItemPadding);
-	cyList += (VeCyFuncMenuItemPadding);
+	cyList += (VeCyFuncMenuItemPadding + 1);
 	m_LV.SetSize(GetWidth(), cyList);
 	SetSize(GetWidth(), VeCyFuncMenuTitle + cyList + VeCyFuncMenuFooter);
 }

@@ -7,6 +7,7 @@ class CVeVisualContainer final : public Dui::CElem, public eck::CFixedTimeLine
 private:
 	constexpr static float SpotLightGenRadius = 40.f;
 
+	CApp::HSlot m_hSlot{};
 	ID2D1DeviceContext1* m_pDC1{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	CVeKeyStroke m_KeyStroke{};

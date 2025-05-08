@@ -166,6 +166,9 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_ptcUiThread = eck::GetThreadCtx();
 		InitRawInput();
+		BOOL bExcludeFromPeek{ TRUE };
+		DwmSetWindowAttribute(hWnd, DWMWA_EXCLUDED_FROM_PEEK,
+			&bExcludeFromPeek, sizeof(BOOL));
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,
@@ -220,7 +223,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 	{
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
-
+		SafeRelease(m_pCompMenuSwitch);
+		PostQuitMessage(0);
 		return lResult;
 	}
 	break;

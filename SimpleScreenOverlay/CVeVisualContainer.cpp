@@ -313,7 +313,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				D2D1::Matrix3x2F::Identity(),
 				xDpi, yDpi, 1.f), &m_pGrSpotLight);
 
-		App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
+		m_hSlot = App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);
 
 		const auto pTfWatermark = App->CreateTextFormat(42);
@@ -351,6 +351,12 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 	{
 		SafeRelease(m_pBrush);
+		SafeRelease(m_pGrSpotLight);
+		SafeRelease(m_pDC1);
+		m_TcWndTip.Invalidate();
+		m_TcRulerCursorTip.Invalidate();
+		m_TcWatermark.Invalidate();
+		App->GetSignal().Disconnect(m_hSlot);
 		GetWnd()->UnregisterTimeLine(this);
 	}
 	break;

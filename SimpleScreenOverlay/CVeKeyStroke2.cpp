@@ -519,14 +519,19 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrushForegnd);
-		App->GetSignal().Connect(this, &CVeKeyStroke2::OnAppEvent);
+		m_hSlot = App->GetSignal().Connect(this, &CVeKeyStroke2::OnAppEvent);
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;
 
 	case WM_DESTROY:
+	{
+		App->GetSignal().Disconnect(m_hSlot);
+		SafeRelease(m_pBrush);
+		SafeRelease(m_pBrushForegnd);
 		GetWnd()->UnregisterTimeLine(this);
-		break;
+	}
+	break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
 }

@@ -1,12 +1,18 @@
 ﻿#include "pch.h"
 #include "CVeMenuContainer.h"
+#include "CWndMain.h"
 
 constexpr static PCWSTR MenuTitle[]
 {
+	L"程序",
 	L"渲染",
 	L"系统工具"
 };
 
+enum class MProgram
+{
+	Exit,
+};
 enum class MRender
 {
 	RainbowColor,
@@ -20,11 +26,26 @@ enum class MRender
 	Ruler,
 	Watermark,
 };
+enum class MTools
+{
+	RestartExplorer,
+	Calculator,
+	CmdPrompt,
+	RegEdit,
+	GPEdit,
+	LocalUser,
+	Desktop,
+};
 
 struct ITEM_DESC
 {
 	std::wstring_view svText;
 	std::wstring_view svTip;
+};
+
+constexpr static ITEM_DESC ItemProgram[]
+{
+	{ L"退出程序"sv,{} },
 };
 
 constexpr static ITEM_DESC ItemRender[]
@@ -44,7 +65,6 @@ constexpr static ITEM_DESC ItemTools[]
 {
 	{ L"重启资源管理器"sv },
 	{ L"计算器"sv },
-	{ L"设置"sv },
 	{ L"命令提示符"sv },
 	{ L"注册表编辑器"sv },
 	{ L"组策略编辑器"sv },
@@ -74,7 +94,12 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case UIE_MENU_GETDISPINFO:
 		{
 			const auto p = (ML_DISPINFO*)lParam;
-			if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+			if ((WPARAM)&m_MenuBox[MenuIdxProgram] == wParam)
+			{
+				p->pszText = ItemProgram[p->idx].svText.data();
+				p->cchText = (int)ItemProgram[p->idx].svText.size();
+			}
+			else if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
 			{
 				p->pszText = ItemRender[p->idx].svText.data();
 				p->cchText = (int)ItemRender[p->idx].svText.size();
@@ -91,7 +116,20 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			const auto p = (Dui::LTN_ITEMCHANGE*)lParam;
 			auto& Opt = App->GetOpt();
 			const auto bSel = !!(p->uFlagsNew & Dui::LEIF_SELECTED);
-			if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
+			if ((WPARAM)&m_MenuBox[MenuIdxProgram] == wParam)
+			{
+				switch ((MProgram)p->idx)
+				{
+				case MProgram::Exit:// 此时在临界区中，另起一下操作防止死锁
+					eck::GetThreadCtx()->Callback.EnQueueCallback([this]
+						{
+							GetWnd()->Destroy();
+						});
+					break;
+				}
+				return TRUE;
+			}
+			else if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
 			{
 				switch ((MRender)p->idx)
 				{
@@ -110,8 +148,33 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				App->GetSignal().Emit(Notify::OptionsChanged, n);
 			}
 			else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam &&
-				(p->uFlagsNew ^ p->uFlagsOld))
+				((p->uFlagsNew ^ p->uFlagsOld) & Dui::LEIF_SELECTED) &&
+				bSel)
 			{
+				PCWSTR pszCmd = nullptr;
+				switch ((MTools)p->idx)
+				{
+				case MTools::RestartExplorer: eck::RestartExplorer(); break;
+				case MTools::Calculator:pszCmd = L"calc.exe";		break;
+				case MTools::CmdPrompt:	pszCmd = L"cmd.exe";		break;
+				case MTools::RegEdit:	pszCmd = L"regedit.exe";	break;
+				case MTools::GPEdit:	pszCmd = L"gpedit.msc";		break;
+				case MTools::LocalUser:	pszCmd = L"compmgmt.msc";	break;
+				case MTools::Desktop:
+				{
+					PWSTR pszDesktop = nullptr;
+					SHGetKnownFolderPath(FOLDERID_Desktop, 0, nullptr,
+						&pszDesktop);
+					eck::OpenInExplorer(pszDesktop, TRUE);
+					CoTaskMemFree(pszDesktop);
+				}
+				break;
+				}
+				if (pszCmd)
+					ShellExecuteW(nullptr, L"open", pszCmd,
+						nullptr, nullptr, SW_SHOWNORMAL);
+				((CWndMain*)GetWnd())->SwitchMenuShowing(FALSE);
+				return TRUE;
 			}
 		}
 		return 0;
@@ -146,8 +209,11 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			x += (VeCxFuncMenu + 10);
 			++i;
 		}
+		auto& MenuProgram = m_MenuBox[MenuIdxProgram].GetMenuList();
 		auto& MenuRender = m_MenuBox[MenuIdxRender].GetMenuList();
 		auto& MenuTools = m_MenuBox[MenuIdxTools].GetMenuList();
+		MenuProgram.SetItemCount(ARRAYSIZE(ItemProgram));
+		m_MenuBox[MenuIdxProgram].ReCalcIdealSize();
 		MenuRender.SetItemCount(ARRAYSIZE(ItemRender));
 		m_MenuBox[MenuIdxRender].ReCalcIdealSize();
 		MenuTools.SetItemCount(ARRAYSIZE(ItemTools));

@@ -41,9 +41,9 @@ HRESULT CGrTextCacheWithBk::CreateGeometryRealization(ID2D1DeviceContext1* pDC,
 	//---取每一行矩形
 	UINT32 idxChar{};
 	UINT32 cActual{};
-	ID2D1PathGeometry1* pGeo;
+	ComPtr<ID2D1PathGeometry1> pGeo;
 	eck::g_pD2dFactory->CreatePathGeometry(&pGeo);
-	ID2D1GeometrySink* pSink;
+	ComPtr<ID2D1GeometrySink> pSink;
 	pGeo->Open(&pSink);
 	D2D1_POINT_2F pt[4];
 	float yLastBottom = FLT_MAX;
@@ -85,11 +85,10 @@ HRESULT CGrTextCacheWithBk::CreateGeometryRealization(ID2D1DeviceContext1* pDC,
 		return hr;
 	float xDpi, yDpi;
 	pDC->GetDpi(&xDpi, &yDpi);
-	hr = pDC->CreateFilledGeometryRealization(pGeo,
+	hr = pDC->CreateFilledGeometryRealization(pGeo.Get(),
 		D2D1::ComputeFlatteningTolerance(
 			pTransform ? *pTransform : D2D1::Matrix3x2F::Identity(),
 			xDpi, yDpi),
 		&pGrBk);
-	pGeo->Release();
 	return hr;
 }

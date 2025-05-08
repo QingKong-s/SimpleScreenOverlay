@@ -32,6 +32,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			(int)iRetInit, dwErr), L"Error", MB_ICONERROR);
 		return 0;
 	}
+#ifndef _DEBUG
+	if (IsNTAdmin(0, nullptr) && !eck::UiaIsAcquired())
+	{
+		eck::UIA uia;
+		if (NT_SUCCESS(eck::UiaTryAcquire(uia)))
+			eck::UiaRestart(uia);
+	}
+#endif // _DEBUG
 
 #if SSO_WINRT
 	DispatcherQueueOptions options
@@ -42,7 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	};
 
 	Windows::System::DispatcherQueueController Controller{ nullptr };
-	hr = CreateDispatcherQueueController(options, 
+	hr = CreateDispatcherQueueController(options,
 		(ABI::Windows::System::IDispatcherQueueController**)(put_abi(Controller)));
 	if (FAILED(hr))
 	{
@@ -71,7 +79,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	pWnd->SetPresentMode(Dui::PresentMode::DCompositionSurface);
 #endif
 	pWnd->Create(nullptr, WS_POPUP,
-		WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST |
+		WS_EX_LAYERED | WS_EX_TRANSPARENT |
+		WS_EX_TOPMOST |
 		WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
 		mi.rcWork.left, mi.rcWork.top,
 		(mi.rcWork.right - mi.rcWork.left),

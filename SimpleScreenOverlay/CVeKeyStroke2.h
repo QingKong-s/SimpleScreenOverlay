@@ -42,6 +42,7 @@ private:
 		}
 	};
 
+	CApp::HSlot m_hSlot{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	ID2D1SolidColorBrush* m_pBrushForegnd{};
 	std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序

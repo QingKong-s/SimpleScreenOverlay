@@ -10,8 +10,9 @@
 #include "eck\CCommDlg.h"
 #include "eck\DuiStdCompositor.h"
 #include "eck\SystemHelper.h"
-#include "eck\MathHelper.h"
+#include "eck\ShellHelper.h"
 #include "eck\CDuiListTemplate.h"
+#include "eck\UIAccess.h"
 
 #if SSO_WINRT
 #include "eck\WinRtDCompInterop.h"

@@ -18,7 +18,7 @@ private:
 
 		Max,
 	};
-
+	CApp::HSlot m_hSlot{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	ID2D1SolidColorBrush* m_pBrushForegnd{};
 	float m_cxyBlock{};

@@ -107,12 +107,12 @@ void CVeKeyStroke::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 					GetParentElem()->GetWidth() - GetWidth() - VeCxKeyStrokeMargin,
 					GetRect().top);
 			}
-		else
-			if (!m_bLeft)
-			{
-				m_bLeft = TRUE;
-				SetPos(VeCxKeyStrokeMargin, GetRect().top);
-			}
+			else
+				if (!m_bLeft)
+				{
+					m_bLeft = TRUE;
+					SetPos(VeCxKeyStrokeMargin, GetRect().top);
+				}
 	}
 	break;
 	case Notify::OptionsChanged:
@@ -259,12 +259,13 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_pDC->CreateSolidColorBrush(App->GetColor(CApp::CrKeyStrokeBkg), &m_pBrush);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrushForegnd);
-		App->GetSignal().Connect(this, &CVeKeyStroke::OnAppEvent);
+		m_hSlot = App->GetSignal().Connect(this, &CVeKeyStroke::OnAppEvent);
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;
 	case WM_DESTROY:
 	{
+		App->GetSignal().Disconnect(m_hSlot);
 		SafeRelease(m_pBrush);
 		SafeRelease(m_pBrushForegnd);
 		GetWnd()->UnregisterTimeLine(this);

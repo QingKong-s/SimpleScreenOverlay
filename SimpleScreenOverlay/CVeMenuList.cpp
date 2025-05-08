@@ -40,16 +40,7 @@ SkipFill:
 
 	if (e.pLayout.Get())
 	{
-		if (App->GetOpt().bRainbowColor)
-		{
-			auto cr{ CalcRainbowColor(NtGetTickCount64()) };
-			cr.r = 1.f - cr.r;
-			cr.g = 1.f - cr.g;
-			cr.b = 1.f - cr.b;
-			m_pBrush->SetColor(cr);
-		}
-		else
-			m_pBrush->SetColor(App->GetColor(CApp::CrText));
+		m_pBrush->SetColor(App->GetColor(CApp::CrText));
 		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pLayout.Get(),
 			m_pBrush, Dui::DrawTextLayoutFlags);
 	}

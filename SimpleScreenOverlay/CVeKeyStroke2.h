@@ -69,8 +69,6 @@ private:
 
 	void ActivateTimeLine()
 	{
-		if (m_bAnimating)
-			return;
 		m_bAnimating = TRUE;
 		GetWnd()->WakeRenderThread();
 	}

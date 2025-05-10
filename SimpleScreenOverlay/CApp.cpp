@@ -17,10 +17,11 @@ void CApp::Init()
 	m_Opt.bWndHilight = 0;
 	m_Opt.bWndHilightDetectChild = 1;
 	m_Opt.bRuler = 0;
-	m_Opt.rsWatermark = L"WATERMARK";
+	m_Opt.rsWatermark = L"QKSOFT";
 	m_Opt.bWatermark = 0;
 	m_Opt.bKSGiveAWayToCursor = 1;
 	m_Opt.bWndTip = 0;
+	m_Opt.bBlurBkg = TRUE;
 }
 
 IDWriteTextFormat* CApp::CreateTextFormat(float fSize)

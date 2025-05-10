@@ -26,6 +26,9 @@ enum
 
 	VeCxRulerTipMargin = 12,
 	VeCyRulerTipMargin = 12,
+
+	VeCyMenuTipBottomMarginPct = 15,
+	VeCxyMenuTipMargin = 5,
 };
 
 enum

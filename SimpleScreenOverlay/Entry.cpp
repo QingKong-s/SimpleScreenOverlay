@@ -83,8 +83,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		WS_EX_TOPMOST |
 		WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
 		mi.rcWork.left, mi.rcWork.top,
-		(mi.rcWork.right - mi.rcWork.left),
-		(mi.rcWork.bottom - mi.rcWork.top),
+		mi.rcWork.right - mi.rcWork.left,
+		mi.rcWork.bottom - mi.rcWork.top,
 		nullptr, 0);
 	pWnd->Visible = TRUE;
 
@@ -101,6 +101,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	delete App;
 	eck::ThreadUnInit();
 	eck::UnInit();
+#ifdef _DEBUG
+	if (eck::g_pDxgiDebug)
+		eck::g_pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+#endif // _DEBUG
 	CoUninitialize();
 	return (int)msg.wParam;
 }

@@ -155,7 +155,7 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (App->GetOpt().bRainbowColor)
 			m_pBrushForegnd->SetColor(CalcRainbowColor(NtGetTickCount64()));
 		else
-			m_pBrushForegnd->SetColor(App->GetColor(CApp::CrDefKeyStroke));
+			m_pBrushForegnd->SetColor(App->GetColor(CApp::CrKeyStroke));
 
 		constexpr auto Padding = (float)VeCxyKeyStrokePadding;
 		constexpr auto Padding2 = (float)VeCyKeyStrokeMouseBtnPadding;

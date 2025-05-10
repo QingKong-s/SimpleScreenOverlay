@@ -149,6 +149,25 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 	}
 }
 
+void CWndMain::OnAppEvent(Notify eNotify, SSONOTIFY& n)
+{
+	switch (eNotify)
+	{
+	case Notify::OptionsChanged:
+#if SSO_WINRT
+		if (m_bBlurBkgEnabled != App->GetOpt().bBlurBkg)
+		{
+			if (!App->GetOpt().bBlurBkg)
+				m_RootVisual.Brush(nullptr);
+			else if (m_bShowMenu)
+				m_RootVisual.Brush(m_BkDropBrush);
+		}
+		m_bBlurBkgEnabled = App->GetOpt().bBlurBkg;
+#endif// SSO_WINRT
+		break;
+	}
+}
+
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -158,9 +177,16 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_SETTINGCHANGE:
+	{
 		eck::MsgOnSettingChangeFixDpiAwareV2(hWnd, wParam, lParam);
-		eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam);
-		break;
+		if (eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam, TRUE))
+		{
+			const auto bDark = ShouldAppsUseDarkMode();
+			App->SetDarkMode(bDark);
+			StSwitchStdThemeMode(bDark);
+		}
+	}
+	break;
 
 	case WM_CREATE:
 	{
@@ -207,22 +233,45 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		POINT pt{ GetClientWidth(),GetClientHeight() };
 		Phy2Log(pt);
 		// 保证VisualContainer的Z序低于MenuContainer
-		m_VisualContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
+		m_VisualContainer.Create(nullptr, 0, 0,
 			0, 0, pt.x, pt.y, nullptr, this);
 		m_MenuContainer.Create(nullptr, 0, 0,
 			0, 0, pt.x, pt.y, nullptr, this);
 		m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
 		RegisterTimeLine(this);
 
+		const auto bDark = ShouldAppsUseDarkMode();
+		App->SetDarkMode(bDark);
+		StSwitchStdThemeMode(bDark);
+
+		m_hSlot = App->GetSignal().Connect(this, &CWndMain::OnAppEvent);
 		SSONOTIFY n{};
 		App->GetSignal().Emit(Notify::OptionsChanged, n);
+
+		m_VisualContainer.SetVisible(TRUE);
 		return lResult;
 	}
 	return 0;
 
 	case WM_DESTROY:
 	{
+		App->GetSignal().Disconnect(m_hSlot);
+		UnregisterTimeLine(this);
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+#if SSO_WINRT
+		SafeRelease(m_pInteropFactory);
+		m_pDcTarget = nullptr;
+		m_Target.Close();
+		m_Target = nullptr;
+		m_ContentVisual = nullptr;
+		m_RootVisual = nullptr;
+		m_BkDropBrush.Close();
+		m_BkDropBrush = nullptr;
+		m_Compositor = nullptr;
+		m_pDcDevice->Commit();
+		m_pDcDevice->WaitForCommitCompletion();
+		SafeRelease(m_pDcDevice);
+#endif// SSO_WINRT
 		SafeRelease(m_pCompMenuSwitch);
 		PostQuitMessage(0);
 		return lResult;
@@ -300,31 +349,34 @@ void CWndMain::SwitchMenuShowing(BOOL bShow)
 	m_bMenuAn = TRUE;
 	m_bShowMenu = bShow;
 #if SSO_WINRT
-	m_BkDropBrush.StopAnimation(L"Blur.Deviation");
-	m_RootVisual.Brush(m_BkDropBrush);
-	auto Batch{ m_Compositor.CreateScopedBatch(CompositionBatchTypes::Animation) };
-	auto An{ m_Compositor.CreateScalarKeyFrameAnimation() };
-	An.Duration(800ms);
-	if (bShow)
+	if (App->GetOpt().bBlurBkg)
 	{
-		An.InsertKeyFrame(0.f, 0.f);
-		An.InsertKeyFrame(1.f, 20.f);
-	}
-	else
-	{
-		An.InsertKeyFrame(0.f, 20.f);
-		An.InsertKeyFrame(1.f, 0.f);
-	}
-	m_BkDropBrush.StartAnimation(L"Blur.Deviation", An);
-	Batch.End();
-	Batch.Completed([this](const auto&, const auto&)
+		m_BkDropBrush.StopAnimation(L"Blur.Deviation");
+		m_RootVisual.Brush(m_BkDropBrush);
+		auto Batch{ m_Compositor.CreateScopedBatch(CompositionBatchTypes::Animation) };
+		auto An{ m_Compositor.CreateScalarKeyFrameAnimation() };
+		An.Duration(800ms);
+		if (bShow)
 		{
-			m_ptcUiThread->Callback.EnQueueCallback([this]
-				{
-					if (!m_bShowMenu && !m_bMenuAn)
-						m_RootVisual.Brush(nullptr);
-				}, 0);
-		});
+			An.InsertKeyFrame(0.f, 0.f);
+			An.InsertKeyFrame(1.f, 20.f);
+		}
+		else
+		{
+			An.InsertKeyFrame(0.f, 20.f);
+			An.InsertKeyFrame(1.f, 0.f);
+		}
+		m_BkDropBrush.StartAnimation(L"Blur.Deviation", An);
+		Batch.End();
+		Batch.Completed([this](const auto&, const auto&)
+			{
+				m_ptcUiThread->Callback.EnQueueCallback([this]
+					{
+						if (!m_bShowMenu && !m_bMenuAn)
+							m_RootVisual.Brush(nullptr);
+					}, 0);
+			});
+	}
 #endif// SSO_WINRT
 	WakeRenderThread();
 }

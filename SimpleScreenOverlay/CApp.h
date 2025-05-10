@@ -41,13 +41,15 @@ public:
 		CrDefFuncMenuBkg,
 		CrDefFuncMenuHot,
 		CrDefFuncMenuSelected,
-		CrDefFuncMenuHotSelected,
 
-		CrCrosshair,
-
+		CrKeyStroke,
 		CrKeyStrokeBkg,
-		CrDefKeyStroke,
 		CrKeyStrokeBkgPressed,
+
+		CrWatermark,
+
+		CrMenuTip,
+		CrMenuTipBkg,
 
 		CrMax
 	};
@@ -56,26 +58,38 @@ public:
 	{
 		eck::ColorrefToD2dColorF(eck::Colorref::White),
 
-		eck::ColorrefToD2dColorF(RGB( 3,201,255), 0.7f),
+		eck::ColorrefToD2dColorF(RGB(3, 201, 255), 0.7f),
 		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(38, 39, 40), 0.7f),
-		eck::ColorrefToD2dColorF(RGB(10, 11, 12), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(25, 26, 27), 0.7f),
+		eck::ColorrefToD2dColorF(RGB(67, 68, 69), 0.65f),
+		eck::ColorrefToD2dColorF(RGB(20, 21, 22), 0.6f),
 
-		eck::ColorrefToD2dColorF(RGB(30, 10, 20), 0.5f),
+		{ 1.f,1.f,1.f,0.6f },
+		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.3f),
+		eck::ColorrefToD2dColorF(RGB(20, 150, 150), 0.3f),
 
-		{ 0.f,0.f,0.f,0.5f },
-		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(120, 88,104), 0.5f),
+		{ 0.f,0.f,0.f,0.1f },
 
+		{ 1.f,1.f,1.f,0.6f },
+		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
 	};
 
 	constexpr static D2D1_COLOR_F ColorDark[CrMax]
 	{
-		eck::ColorrefToD2dColorF(eck::Colorref::Black),
-		eck::ColorrefToD2dColorF(RGB(72, 88,104)),
-		eck::ColorrefToD2dColorF(RGB(18, 19, 20)),
-		eck::ColorrefToD2dColorF(RGB(100, 110, 130)),
+		eck::ColorrefToD2dColorF(eck::Colorref::White),
+
+		eck::ColorrefToD2dColorF(RGB(4, 170, 211), 0.7f),
+		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
+		eck::ColorrefToD2dColorF(RGB(70, 71, 72), 0.6f),
+		eck::ColorrefToD2dColorF(RGB(110, 111, 112), 0.65f),
+
+		{ 1.f,1.f,1.f,0.6f },
+		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.3f),
+		eck::ColorrefToD2dColorF(RGB(20, 150, 150), 0.3f),
+
+		{ 1.f,1.f,1.f,0.1f },
+
+		{ 1.f,1.f,1.f,0.6f },
+		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
 	};
 private:
 	struct OPT
@@ -91,7 +105,8 @@ private:
 		BOOLEAN bWatermark;
 		BOOLEAN bKSGiveAWayToCursor;
 		BOOLEAN bTime;
-		BOOLEAN bWndTip{};
+		BOOLEAN bWndTip;
+		BOOLEAN bBlurBkg;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;
@@ -126,6 +141,8 @@ public:
 	IDWriteTextFormat* CreateTextFormat(float fSize);
 
 	EckInlineNdCe auto& GetSignal() { return m_Sig; }
+
+	EckInlineCe void SetDarkMode(BOOL bDark) { m_bDarkMode = bDark; }
 };
 
 extern CApp* App;

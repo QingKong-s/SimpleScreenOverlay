@@ -14,7 +14,7 @@ void CVeMenuList::LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint)
 		if (App->GetOpt().bRainbowColor)
 			m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
 		else
-			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuHotSelected));
+			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuSelected));
 	else
 		if (m_idxHot == idx)
 			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuHot));
@@ -44,4 +44,15 @@ SkipFill:
 		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pLayout.Get(),
 			m_pBrush, Dui::DrawTextLayoutFlags);
 	}
+}
+
+LRESULT CVeMenuList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_LBUTTONDBLCLK:
+		CallEvent(WM_LBUTTONDOWN, wParam, lParam);
+		break;
+	}
+	return __super::OnEvent(uMsg, wParam, lParam);
 }

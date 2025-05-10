@@ -18,6 +18,9 @@ private:
 
 	BITBOOL m_bShowMenu : 1{};
 	BITBOOL m_bMenuAn : 1{};
+	BOOLEAN m_bBlurBkgEnabled{ 2 };
+
+	CApp::HSlot m_hSlot{};
 
 #if SSO_WINRT
 	IInteropCompositorFactoryPartner* m_pInteropFactory{};
@@ -35,6 +38,8 @@ private:
 	BOOL InitRawInput();
 
 	void OnInput(WPARAM wParam, LPARAM lParam);
+
+	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 public:
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

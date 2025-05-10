@@ -15,13 +15,14 @@ enum class MProgram
 };
 enum class MRender
 {
+	BlurBkg,
 	RainbowColor,
 	Crosshair,
 	KeyStroke,
 	KeyStroke2,
 	Time,
 	SpotLight,
-	WindowHighlight,
+	WindowHiLight,
 	WindowTip,
 	Ruler,
 	Watermark,
@@ -50,16 +51,17 @@ constexpr static ITEM_DESC ItemProgram[]
 
 constexpr static ITEM_DESC ItemRender[]
 {
-	{ L"彩虹色"sv, {} },
+	{ L"模糊背景"sv, L"是否在显示菜单时模糊背景"sv },
+	{ L"彩虹色"sv, L"某些前景色显示为彩虹色"sv },
 	{ L"准星线"sv, L"在屏幕上显示准星线"sv },
 	{ L"按键显示"sv, L"显示游戏按键输入"sv },
 	{ L"按键显示2"sv, L"显示所有按键输入"sv },
-	{ L"时间"sv, L"显示时间"sv },
+	{ L"时间"sv, L"TODO"sv },
 	{ L"聚光灯"sv, L"双击Ctrl在光标位置显示一个光斑"sv },
 	{ L"窗口高亮"sv, L"在光标所在窗口的周围显示一个方框"sv },
 	{ L"窗口提示"sv, L"显示在光标所在窗口的详细信息"sv },
-	{ L"标尺"sv, L"显示标尺"sv },
-	{ L"水印"sv, L"在屏幕中央显示一个水印"sv }
+	{ L"标尺"sv, L"显示光标所在窗口坐标内的标尺"sv },
+	{ L"水印"sv, L"在屏幕中央显示水印"sv }
 };
 constexpr static ITEM_DESC ItemTools[]
 {
@@ -72,6 +74,18 @@ constexpr static ITEM_DESC ItemTools[]
 	{ L"桌面"sv },
 };
 
+constexpr const ITEM_DESC& GetItemDesc(int idxMenu, int idx)
+{
+	EckAssert(idxMenu >= 0 && idxMenu < ARRAYSIZE(MenuTitle));
+	switch (idxMenu)
+	{
+	case MenuIdxProgram: return ItemProgram[idx];
+	case MenuIdxRender: return ItemRender[idx];
+	case MenuIdxTools: return ItemTools[idx];
+	default: ECK_UNREACHABLE;
+	}
+}
+
 LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -81,8 +95,25 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
 
-		ECK_DUI_DBG_DRAW_FRAME;
+		if (m_pTlTip.Get())
+		{
+			auto rcF = eck::MakeD2DRcF(m_rcTip);
+			m_pBrushTip->SetColor(App->GetColor(CApp::CrMenuTipBkg));
+			m_pDC->FillRectangle(rcF, m_pBrushTip);
 
+			if (App->GetOpt().bRainbowColor)
+				m_pBrushTip->SetColor(CalcRainbowColor(NtGetTickCount64()));
+			else
+				m_pBrushTip->SetColor(App->GetColor(CApp::CrMenuTip));
+			m_pDC->DrawTextLayout({ 0.f,rcF.top + (float)VeCxyMenuTipMargin },
+				m_pTlTip.Get(), m_pBrushTip, Dui::DrawTextLayoutFlags);
+
+			constexpr float LineWidth = 1.f;
+			eck::InflateRect(rcF, -LineWidth / 2.f, -LineWidth / 2.f);
+			m_pDC->DrawRectangle(rcF, m_pBrushTip, LineWidth);
+		}
+
+		ECK_DUI_DBG_DRAW_FRAME;
 		EndPaint(ps);
 	}
 	return 0;
@@ -94,23 +125,44 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case UIE_MENU_GETDISPINFO:
 		{
 			const auto p = (ML_DISPINFO*)lParam;
-			if ((WPARAM)&m_MenuBox[MenuIdxProgram] == wParam)
-			{
-				p->pszText = ItemProgram[p->idx].svText.data();
-				p->cchText = (int)ItemProgram[p->idx].svText.size();
-			}
-			else if ((WPARAM)&m_MenuBox[MenuIdxRender] == wParam)
-			{
-				p->pszText = ItemRender[p->idx].svText.data();
-				p->cchText = (int)ItemRender[p->idx].svText.size();
-			}
-			else if ((WPARAM)&m_MenuBox[MenuIdxTools] == wParam)
-			{
-				p->pszText = ItemTools[p->idx].svText.data();
-				p->cchText = (int)ItemTools[p->idx].svText.size();
-			}
+			const auto idxMenu = int((CVeFunctionMenu*)wParam - m_MenuBox);
+			const auto& e = GetItemDesc(idxMenu, p->idx);
+			p->pszText = e.svText.data();
+			p->cchText = (int)e.svText.size();
 		}
 		return 0;
+
+		case Dui::LTE_HOTITEMCHANED:
+		{
+			const auto p = (Dui::LTN_HOTITEMCHANGE*)lParam;
+			if (p->idx < 0)
+			{
+				m_pTlTip.Clear();
+				goto Exit;
+			}
+			const auto idxMenu = int((CVeFunctionMenu*)wParam - m_MenuBox);
+			const auto& e = GetItemDesc(idxMenu, p->idx);
+			eck::g_pDwFactory->CreateTextLayout(
+				e.svTip.data(), (UINT32)e.svTip.size(), m_pTfTip.Get(),
+				GetWidthF(), GetHeightF(), m_pTlTip.AddrOfClear());
+			if (!m_pTlTip.Get())
+				goto Exit;
+			DWRITE_TEXT_METRICS tm;
+			m_pTlTip->GetMetrics(&tm);
+			D2D1_RECT_F rc;
+			const auto cyBottom = GetHeightF() *
+				(float)VeCyMenuTipBottomMarginPct / 100.f;
+			rc.left = (GetWidthF() - tm.width) / 2.f;
+			rc.top = GetHeightF() - tm.height - cyBottom;
+			rc.right = rc.left + tm.width;
+			rc.bottom = rc.top + tm.height;
+			eck::CeilRect(rc, m_rcTip);
+			eck::InflateRect(m_rcTip, VeCxyMenuTipMargin, VeCxyMenuTipMargin);
+		}
+	Exit:
+		InvalidateRect(m_rcTip);
+		return 0;
+
 		case Dui::LTE_ITEMCHANED:
 		{
 			const auto p = (Dui::LTN_ITEMCHANGE*)lParam;
@@ -133,13 +185,14 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				switch ((MRender)p->idx)
 				{
+				case MRender::BlurBkg:		Opt.bBlurBkg = bSel;		break;
 				case MRender::RainbowColor:	Opt.bRainbowColor = bSel;	break;
 				case MRender::Crosshair:	Opt.bCrosshair = bSel;		break;
 				case MRender::KeyStroke:	Opt.bKeyStroke = bSel;		break;
 				case MRender::KeyStroke2:	Opt.bKeyStroke2 = bSel;		break;
 				case MRender::Time:			Opt.bTime = bSel;			break;
 				case MRender::SpotLight:	Opt.bSpotLight = bSel;		break;
-				case MRender::WindowHighlight:	Opt.bWndHilight = bSel;	break;
+				case MRender::WindowHiLight:Opt.bWndHilight = bSel;		break;
 				case MRender::WindowTip:	Opt.bWndTip = bSel;			break;
 				case MRender::Ruler:		Opt.bRuler = bSel;			break;
 				case MRender::Watermark:	Opt.bWatermark = bSel;		break;
@@ -186,6 +239,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if ((wParam ^ lParam) & Dui::DES_VISIBLE)
 		{
+			m_pTlTip.Clear();
 			if (lParam & Dui::DES_VISIBLE)
 			{
 				m_bTimeLineActive = TRUE;
@@ -199,6 +253,14 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
+		m_pTfTip = App->CreateTextFormat(20);
+		m_pTfTip->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		m_pTfTip->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+		m_pTfTip->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
+		m_pTfTip->Release();
+
+		m_pDC->CreateSolidColorBrush({}, &m_pBrushTip);
+
 		int x = (GetWidth() -
 			((VeCxFuncMenu + 20) * ARRAYSIZE(m_MenuBox))) / 2;
 		constexpr auto y = 400;
@@ -219,6 +281,8 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		MenuTools.SetItemCount(ARRAYSIZE(ItemTools));
 		m_MenuBox[MenuIdxTools].ReCalcIdealSize();
 		const auto& Opt = App->GetOpt();
+		if (Opt.bBlurBkg)
+			MenuRender.SetItemState((int)MRender::BlurBkg, Dui::LEIF_SELECTED);
 		if (Opt.bRainbowColor)
 			MenuRender.SetItemState((int)MRender::RainbowColor, Dui::LEIF_SELECTED);
 		if (Opt.bCrosshair)
@@ -232,7 +296,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (Opt.bSpotLight)
 			MenuRender.SetItemState((int)MRender::SpotLight, Dui::LEIF_SELECTED);
 		if (Opt.bWndHilight)
-			MenuRender.SetItemState((int)MRender::WindowHighlight, Dui::LEIF_SELECTED);
+			MenuRender.SetItemState((int)MRender::WindowHiLight, Dui::LEIF_SELECTED);
 		if (Opt.bWndTip)
 			MenuRender.SetItemState((int)MRender::WindowTip, Dui::LEIF_SELECTED);
 		if (Opt.bRuler)
@@ -245,6 +309,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		GetWnd()->UnregisterTimeLine(this);
+		SafeRelease(m_pBrushTip);
 		break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
@@ -254,4 +319,10 @@ void STDMETHODCALLTYPE CVeMenuContainer::Tick(int iMs)
 {
 	for (auto& e : m_MenuBox)
 		e.InvalidateRect();
+	if (m_pTlTip.Get())
+	{
+		RECT rc{ m_rcTip };
+		ElemToClient(rc);
+		InvalidateRect(rc);
+	}
 }

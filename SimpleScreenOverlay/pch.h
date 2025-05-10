@@ -5,6 +5,9 @@
 #define _CRTDBG_MAP_ALLOC 1
 
 #define SSO_WINRT 1
+#if SSO_WINRT
+#define ECK_OPT_NO_CHECK_DX_LEAK 1
+#endif// SSO_WINRT
 
 #include "eck\PchInc.h"
 #include "eck\CCommDlg.h"

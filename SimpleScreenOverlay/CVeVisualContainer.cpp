@@ -140,8 +140,13 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	{
 		ECK_DUILOCK;
 		const auto Opt = App->GetOpt();
-		m_bTimeLineActive = !!Opt.bCrosshair || !!Opt.bRuler || 
+		const auto b = !!Opt.bCrosshair || !!Opt.bRuler ||
 			!!Opt.bWndHilight;
+		if ((m_bTimeLineActive && !b) ||
+			m_bWatermarkEnabled != !!Opt.bWatermark)
+			InvalidateRect();
+		m_bTimeLineActive = b;
+		m_bWatermarkEnabled = !!Opt.bWatermark;
 	}
 	break;
 	}
@@ -279,7 +284,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//===水印
 		if (App->GetOpt().bWatermark)
 		{
-			m_pBrush->SetColor(D2D1_COLOR_F{ 1.f,1.f,1.f,0.3f });
+			m_pBrush->SetColor(App->GetColor(CApp::CrWatermark));
 			m_pDC1->DrawGeometryRealization(m_TcWatermark.GetGeometryRealization(),
 				m_pBrush);
 		}

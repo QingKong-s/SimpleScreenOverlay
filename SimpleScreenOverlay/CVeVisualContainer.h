@@ -41,6 +41,7 @@ private:
 	CGrTextCache m_TcRulerCursorTip{};
 
 	CGrTextCache m_TcWatermark{};
+	BOOLEAN m_bWatermarkEnabled{ 2 };
 
 	BOOLEAN m_bTimeLineActive{ TRUE };
 

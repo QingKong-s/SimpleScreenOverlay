@@ -346,9 +346,9 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 {
 	BOOL bNewItem;
 	const auto it = IkpInsert(Vk, bNewItem);
-	it->uFlags |= KIF_KEYDOWN;
 	if (bNewItem)// 准备动画
 	{
+		it->uFlags |= KIF_KEYDOWN;
 		CalcCenterBottomPos(it->xSrc, it->ySrc);
 		it->x = it->xSrc;
 		it->y = it->ySrc;
@@ -357,7 +357,22 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 	}
 	else
 	{
-		InvalidateRect();
+		if (!(it->uFlags & KIF_KEYDOWN))
+		{
+			it->uFlags |= KIF_KEYDOWN;
+			if (!m_bAnimating)
+			{
+				D2D1_RECT_F rcF;
+				RECT rc;
+				CalcKeyItemNormalPos(it - m_vItem.begin(), rcF.left, rcF.top);
+				rcF.right = rcF.left + m_cxyBlock;
+				rcF.bottom = rcF.top + m_cxyBlock;
+				eck::CeilRect(rcF, rc);
+				eck::InflateRect(rc, VeCxKeyStrokeBorder, VeCxKeyStrokeBorder);
+				ElemToClient(rc);
+				InvalidateRect(rc);
+			}
+		}
 	}
 }
 
@@ -367,8 +382,22 @@ void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
 	const auto it = std::lower_bound(m_vItem.begin(), m_vItem.end(), e);
 	if (it == m_vItem.end())
 		return;
-	it->uFlags &= ~KIF_KEYDOWN;
-	InvalidateRect();
+	if (it->uFlags & KIF_KEYDOWN)
+	{
+		it->uFlags &= ~KIF_KEYDOWN;
+		if (!m_bAnimating)
+		{
+			D2D1_RECT_F rcF;
+			RECT rc;
+			CalcKeyItemNormalPos(it - m_vItem.begin(), rcF.left, rcF.top);
+			rcF.right = rcF.left + m_cxyBlock;
+			rcF.bottom = rcF.top + m_cxyBlock;
+			eck::CeilRect(rcF, rc);
+			eck::InflateRect(rc, VeCxKeyStrokeBorder, VeCxKeyStrokeBorder);
+			ElemToClient(rc);
+			InvalidateRect(rc);
+		}
+	}
 }
 
 void CVeKeyStroke2::IkpBeginRePos()
@@ -598,10 +627,11 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 	{
 		const auto cxMax = m_cxyBlock * m_vItem.size() +
 			(float)VeCxyKeyStroke2Padding * (m_vItem.size() - 1);
+		const auto x = (GetWidthF() - cxMax) / 2.f;
 		RECT rc;
-		rc.left = (GetWidth() - cxMax) / 2;
-		rc.top = 0;
-		rc.right = rc.left + cxMax;
+		rc.left = (int)floorf(x) - VeCxKeyStrokeBorder;
+		rc.top = -VeCxKeyStrokeBorder;
+		rc.right = (int)ceilf(x + cxMax + (float)VeCxKeyStrokeBorder);
 		rc.bottom = GetHeight();
 		ElemToClient(rc);
 		InvalidateRect(rc);
@@ -629,7 +659,7 @@ void CVeKeyStroke2::PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e)
 		crForegnd = CalcRainbowColorWithStep(
 			NtGetTickCount64(), int(&e - &m_vItem[0]) * 8);
 	else
-		crForegnd = App->GetColor(CApp::CrDefKeyStroke);
+		crForegnd = App->GetColor(CApp::CrKeyStroke);
 	if (e.eState == ItemState::FadeIn)
 	{
 		crBkg.a *= e.fOpacity;

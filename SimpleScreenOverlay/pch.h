@@ -4,7 +4,7 @@
 
 #define _CRTDBG_MAP_ALLOC 1
 
-#define SSO_WINRT 1
+#define SSO_WINRT 0
 #if SSO_WINRT
 #define ECK_OPT_NO_CHECK_DX_LEAK 1
 #endif// SSO_WINRT
@@ -16,6 +16,7 @@
 #include "eck\ShellHelper.h"
 #include "eck\CDuiListTemplate.h"
 #include "eck\UIAccess.h"
+#include "eck\EzDx.h"
 
 #if SSO_WINRT
 #include "eck\WinRtDCompInterop.h"
@@ -37,6 +38,7 @@ using eck::SafeRelease;
 using eck::ComPtr;
 
 namespace Dui = eck::Dui;
+namespace EzDx = eck::EzDx;
 
 using namespace std::literals;
 #if SSO_WINRT

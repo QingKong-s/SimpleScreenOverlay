@@ -1,6 +1,135 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
 
+constexpr char Shader[] = R"VSPS(
+Texture2D gTexture : register(t0);
+SamplerState gSampler : register(s0);
+
+cbuffer cb: register(b0)
+{
+	float2 toUV;
+	float2 offsetUV;
+};
+
+float4 PS(float4 pos : SV_POSITION) : SV_Target
+{
+	//return float4(1.f, 1.f,0.f, 0.2f);
+	float4 texClr = gTexture.Sample(gSampler, (pos.xy - offsetUV) * toUV);
+	return texClr;
+	float r = (texClr.r * 0.2126f + texClr.g * 0.7152f + texClr.b * 0.0722f);
+	return float4(r, r, r, texClr.a);
+}
+)VSPS";
+
+
+constexpr char VSBitBlt[]{ R"VSPS(
+float4 VS(float4 pos : POSITION) : SV_Position
+{
+	return pos;
+}
+)VSPS" };
+
+constexpr char PSLight[]{ R"VSPS(
+Texture2D gTexture : register(t0);
+SamplerState gSampler : register(s0);
+
+cbuffer cb: register(b0)
+{
+	float2 toUV;
+	float2 offsetUV;
+	float threshold;
+};
+float4 PS(float4 pos : SV_POSITION) : SV_Target
+{
+	float4 texClr = gTexture.Sample(gSampler, (pos.xy - offsetUV) * toUV);
+	float luminance = dot(texClr.rgb, float3(0.2126, 0.7152, 0.0722));
+	return (luminance > threshold) ? texClr *1.f : float4(0, 0, 0, 1);
+	return float4(
+		saturate(((texClr.rgb) - threshold) / (1 - threshold)) * 1000.f,
+		texClr.a);
+}
+)VSPS" };
+
+constexpr char PSBlur[]{ R"VSPS(
+Texture2D gTexture : register(t0);
+SamplerState gSampler : register(s0);
+
+cbuffer cb: register(b0)
+{
+	float2 toUV;
+	float2 offsetUV;
+	float2 blurDir;
+	float blurRadius;
+	float sigma;
+};
+struct PS_INPUT
+{
+	float4 pos : SV_POSITION;
+	float2 uv : TEXCOORD0;
+};
+float Gaussian(float x, float sigma)
+{
+	return exp(-0.5 * (x * x) / (sigma * sigma));
+}
+float4 PS(float4 pos : SV_POSITION) : SV_Target
+{
+	float weightSum = 0;
+
+	float4 color = float4(0, 0, 0, 0);
+	for (int i = -blurRadius; i <= blurRadius; ++i)
+	{
+		float offset = float(i);
+		float2 offsetNew = offsetUV + offset * blurDir;
+		float weight = Gaussian(offset, sigma);
+		float4 sample = gTexture.Sample(gSampler, (pos.xy - offsetNew) * toUV);
+		color += (sample * weight);
+		weightSum += weight;
+	}
+	//color.a = 0;
+	color /= weightSum;
+	return color;
+}
+)VSPS" };
+
+constexpr char PSFinal[]{ R"VSPS(
+Texture2D gTextureBase : register(t0);
+Texture2D gTextureBloom : register(t1);
+SamplerState gSampler : register(s0);
+
+cbuffer cb: register(b0)
+{
+	float2 toUV;
+	float2 offsetUV;
+	float BaseIntensity;
+	float BaseSaturation;
+	float BloomIntensity;
+	float BloomSaturation;
+};
+
+float4 AdjustSaturation(float4 color, float saturation)
+{
+	float grey = dot(color.rgb, float3(0.3, 0.59, 0.11));
+	return lerp(grey, color, saturation);
+}
+
+float4 PS(float4 pos : SV_POSITION) : SV_Target
+{
+	float4 bloom = gTextureBloom.Sample(gSampler, (pos.xy - offsetUV) * toUV);
+	float4 base = gTextureBase.Sample(gSampler, (pos.xy - offsetUV) * toUV);
+	float a1 = base.a, a2 = bloom.a;
+	//return bloom;
+
+	bloom = AdjustSaturation(bloom, BloomSaturation) * BloomIntensity;
+	base = AdjustSaturation(base, BaseSaturation) * BaseIntensity;
+
+	base *= (1 - saturate(bloom));
+	float4 outClr = base + bloom;
+	outClr.a = min(a1, a2);
+	// outClr.a = 1;
+	return outClr;
+}
+)VSPS" };
+
 
 BOOL CWndMain::InitRawInput()
 {
@@ -168,6 +297,105 @@ void CWndMain::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	}
 }
 
+void CWndMain::SdEnsureTextureDimension(int cx, int cy)
+{
+	//if (!m_pD3DTxRenderResult || m_cxD3DTx < cx || m_cyD3DTx < cy)
+	//{
+	//	SafeRelease(m_pD3DTxRenderResult);
+	//	m_cxD3DTx = cx;
+	//	m_cyD3DTx = cy;
+	//	D3D11_TEXTURE2D_DESC Desc{};
+	//	Desc.Width = cx;
+	//	Desc.Height = cy;
+	//	Desc.MipLevels = 1;
+	//	Desc.ArraySize = 1;
+	//	Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	//	Desc.SampleDesc.Count = 1;
+	//	Desc.Usage = D3D11_USAGE_DEFAULT;
+	//	Desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	//	Desc.CPUAccessFlags = 0;
+	//	Desc.MiscFlags = 0;
+	//	eck::g_pD3d11Device->CreateTexture2D(&Desc, nullptr, &m_pD3DTxRenderResult);
+	//	eck::g_pD3d11Device->CreateTexture2D(&Desc, nullptr, &m_pD3DTxtMid1);
+	//	eck::g_pD3d11Device->CreateTexture2D(&Desc, nullptr, &m_pD3DTxtMid2);
+	//	m_pD3DTxRenderResult->QueryInterface(&m_pDxgiSfcRenderResult);
+
+	//	SafeRelease(m_pD3DSrvRenderResult);
+	//	D3D11_SHADER_RESOURCE_VIEW_DESC SrvDesc{};
+	//	SrvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	//	SrvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	//	SrvDesc.Texture2D.MipLevels = 1;
+	//	eck::g_pD3d11Device->CreateShaderResourceView(
+	//		m_pD3DTxRenderResult, &SrvDesc, &m_pD3DSrvRenderResult);
+	//	//m_pD3DC->GenerateMips(m_pD3DSrvRenderResult);
+	//}
+}
+
+void CWndMain::SdInitD3D()
+{
+	eck::g_pD3d11Device->GetImmediateContext(&m_pD3DC);
+	const auto cxClient = GetClientWidth();
+	const auto cyClient = GetClientHeight();
+	m_TexMid1.Create(cxClient / 2, cyClient / 2);
+	m_RtvMid1.Create(m_TexMid1.Get());
+	m_SrvMid1.Create(m_TexMid1.Get());
+	m_TexMid2.Create(cxClient / 2, cyClient / 2);
+	//m_TexMid2.Create(cxClient, cyClient, DXGI_FORMAT_R16G16B16A16_FLOAT);
+	m_RtvMid2.Create(m_TexMid2.Get());
+	m_SrvMid2.Create(m_TexMid2.Get());
+	m_cxD3DTx = cxClient;
+	m_cyD3DTx = cyClient;
+	m_TexRenderResult.Create(cxClient, cyClient);
+	m_TexRenderResult->QueryInterface(&m_pDxgiSfcRenderResult);
+	m_RtvRenderResult.Create(m_TexRenderResult.Get());
+	m_SrvRenderResult.Create(m_TexRenderResult.Get());
+
+	m_Sampler.Create();
+
+	constexpr D3D11_INPUT_ELEMENT_DESC Layout[]
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT },
+	};
+	m_VSBitBlt.Create(EckStrAndLen(VSBitBlt), "VS", Layout, ARRAYSIZE(Layout));
+	m_PSLight.Create(EckStrAndLen(PSLight), "PS");
+	m_PSBlur.Create(EckStrAndLen(PSBlur), "PS");
+	m_PSFinal.Create(EckStrAndLen(PSFinal), "PS");
+	m_PSBitBlt.Create(EckStrAndLen(Shader), "PS");
+
+	m_BufConstBitBlt.Create(sizeof(m_CbBitBlt), D3D11_BIND_CONSTANT_BUFFER,
+		D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	m_BufConstLight.Create(sizeof(m_CbLight), D3D11_BIND_CONSTANT_BUFFER,
+		D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	m_BufConstBlur.Create(sizeof(m_CbBlur), D3D11_BIND_CONSTANT_BUFFER,
+		D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	m_BufConstFinal.Create(sizeof(m_CbFinal), D3D11_BIND_CONSTANT_BUFFER,
+		D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+	DirectX::XMFLOAT4 Vet[6]
+	{
+		{ -1.f, 1.f, 0.f, 1.f },
+		{ 1.f, 1.f, 0.f, 1.f },
+		{ -1.f, -1.f, 0.f, 1.f },
+		{ -1.f, -1.f, 0.f, 1.f },
+		{ 1.f, 1.f, 0.f, 1.f },
+		{ 1.f, -1.f, 0.f, 1.f }
+	};
+	m_BufVertex.Create(sizeof(Vet), D3D11_BIND_VERTEX_BUFFER,
+		D3D11_USAGE_IMMUTABLE, 0, 0, Vet);
+
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	ID3D11BlendState* blendState = nullptr;
+	eck::g_pD3d11Device->CreateBlendState(&blendDesc, &m_pD3DBS);
+}
+
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -190,11 +418,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
+		SetDrawDirtyRect(TRUE);
 		m_ptcUiThread = eck::GetThreadCtx();
 		InitRawInput();
 		BOOL bExcludeFromPeek{ TRUE };
 		DwmSetWindowAttribute(hWnd, DWMWA_EXCLUDED_FROM_PEEK,
 			&bExcludeFromPeek, sizeof(BOOL));
+
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,
@@ -228,6 +458,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DcvInit(pDcVisual.get(), pDcDevice);
 #endif// SSO_WINRT
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+		SdInitD3D();
+
 		m_pCompMenuSwitch = new Dui::CCompositorPageAn{};
 		m_pCompMenuSwitch->InitAsTranslationOpacity();
 		POINT pt{ GetClientWidth(),GetClientHeight() };
@@ -281,21 +513,151 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnMsg(hWnd, uMsg, wParam, lParam);
 }
 
-#if SSO_WINRT
 LRESULT CWndMain::OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e)
 {
 	switch (uMsg)
 	{
-	case Dui::RE_POSTRENDER:
-	case Dui::RE_COMMIT:
+	case Dui::RE_PRERENDER:
+		//return 0;
 	{
-		m_pDcDevice->Commit();
+		int cx, cy;
+		if (e.PreRender.prcDirtyPhy)
+		{
+			cx = e.PreRender.prcDirtyPhy->right - e.PreRender.prcDirtyPhy->left;
+			cy = e.PreRender.prcDirtyPhy->bottom - e.PreRender.prcDirtyPhy->top;
+		}
+		else
+		{
+			cx = GetClientWidth();
+			cy = GetClientHeight();
+		}
+		SdEnsureTextureDimension(cx, cy);
+		e.PreRender.pSfcNewDst = m_pDxgiSfcRenderResult;
+		auto& rcNew = *e.PreRender.prcNewDirtyPhy;
+		rcNew.left = 0;
+		rcNew.top = 0;
+		rcNew.right = cx;
+		rcNew.bottom = cy;
 	}
-	break;
+	return Dui::RER_REDIRECTION;
+	case Dui::RE_POSTRENDER:
+	{
+		constexpr float ClearColor[4]{ 0.f,0.f,0.f,0.f };
+		const auto& rcNew = *e.PreRender.prcNewDirtyPhy;
+		const auto cx = rcNew.right - rcNew.left;
+		const auto cy = rcNew.bottom - rcNew.top;
+		// 通用状态
+		m_pD3DC->IASetInputLayout(m_VSBitBlt.GetInputLayout());
+		constexpr UINT Stride = sizeof(DirectX::XMFLOAT4);
+		constexpr UINT Offset = 0;
+		m_pD3DC->IASetVertexBuffers(0, 1, &m_BufVertex.pBuffer, &Stride, &Offset);
+		m_pD3DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pD3DC->VSSetShader(m_VSBitBlt.GetShader(), nullptr, 0);
+		m_pD3DC->OMSetBlendState(m_pD3DBS, nullptr, 0xffffffff);
+		m_pD3DC->PSSetSamplers(0, 1, &m_Sampler.pSampler);
+		// 最终图面渲染目标视图
+		ComPtr<ID3D11RenderTargetView> pRtv;
+		ComPtr<ID3D11Resource> pSfcRes;
+		e.PreRender.pSfcFinalDst->QueryInterface(&pSfcRes);
+		eck::g_pD3d11Device->CreateRenderTargetView(pSfcRes.Get(), nullptr, &pRtv);
+		D3D11_VIEWPORT Viewport{};
+		// 提取亮色
+		m_pD3DC->ClearRenderTargetView(m_RtvMid1.Get(), ClearColor);
+		m_pD3DC->OMSetRenderTargets(1, &m_RtvMid1.pRtv, nullptr);
+		/*Viewport.TopLeftX = e.PreRender.ptOffsetPhy.x;
+		Viewport.TopLeftY = e.PreRender.ptOffsetPhy.y;*/
+		Viewport.Width = cx;
+		Viewport.Height = cy;
+		Viewport.MinDepth = 0.f;
+		Viewport.MaxDepth = 1.f;
+		m_pD3DC->RSSetViewports(1, &Viewport);
+
+		m_CbLight.ToUV = { 1.f / m_cxD3DTx, 1.f / m_cyD3DTx };
+		m_CbLight.Threshold = 0.1f;
+		D3D11_MAPPED_SUBRESOURCE Mapped{};
+		auto hr = m_pD3DC->Map(m_BufConstLight.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped);
+		memcpy(Mapped.pData, &m_CbLight, sizeof(m_CbLight));
+		m_pD3DC->Unmap(m_BufConstLight.Get(), 0);
+
+		m_pD3DC->PSSetShader(m_PSLight.Get(), nullptr, 0);
+		m_pD3DC->PSSetConstantBuffers(0, 1, &m_BufConstLight.pBuffer);
+		m_pD3DC->PSSetShaderResources(0, 1, &m_SrvRenderResult.pSrv);
+
+		m_pD3DC->Draw(6, 0);
+		// 横向模糊
+		m_pD3DC->ClearRenderTargetView(m_RtvMid2.Get(), ClearColor);
+		m_pD3DC->OMSetRenderTargets(1, &m_RtvMid2.pRtv, nullptr);
+		m_CbBlur.ToUV = { 1.f / m_cxD3DTx, 1.f / m_cyD3DTx };
+		m_CbBlur.OffsetUV = { 0.f, 0.f };
+		m_CbBlur.Sigma = 10.f;
+		m_CbBlur.Radius = 30.f;
+		m_CbBlur.Direction = { 1.f,0.f };
+		hr = m_pD3DC->Map(m_BufConstBlur.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped);
+		memcpy(Mapped.pData, &m_CbBlur, sizeof(m_CbBlur));
+		m_pD3DC->Unmap(m_BufConstBlur.Get(), 0);
+
+		m_pD3DC->PSSetShader(m_PSBlur.Get(), nullptr, 0);
+		m_pD3DC->PSSetConstantBuffers(0, 1, &m_BufConstBlur.pBuffer);
+		m_pD3DC->PSSetShaderResources(0, 1, &m_SrvMid1.pSrv);
+
+		m_pD3DC->Draw(6, 0);
+		// 纵向模糊
+		m_pD3DC->ClearRenderTargetView(m_RtvMid1.Get(), ClearColor);
+		m_pD3DC->OMSetRenderTargets(1, &m_RtvMid1.pRtv, nullptr);
+		m_CbBlur.Direction = { 0.f,1.f };
+		hr = m_pD3DC->Map(m_BufConstBlur.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped);
+		memcpy(Mapped.pData, &m_CbBlur, sizeof(m_CbBlur));
+		m_pD3DC->Unmap(m_BufConstBlur.Get(), 0);
+
+		m_pD3DC->PSSetShaderResources(0, 1, &m_SrvMid2.pSrv);
+
+		m_pD3DC->Draw(6, 0);
+		// 叠加
+		Viewport.TopLeftX = e.PreRender.ptOffsetPhy.x;
+		Viewport.TopLeftY = e.PreRender.ptOffsetPhy.y;
+		m_pD3DC->RSSetViewports(1, &Viewport);
+
+		m_pD3DC->ClearRenderTargetView(pRtv.Get(), ClearColor);
+		m_pD3DC->OMSetRenderTargets(1, pRtv.AddrOf(), nullptr);
+
+		m_CbFinal.ToUV = { 1.f / m_cxD3DTx, 1.f / m_cyD3DTx };
+		m_CbFinal.OffsetUV = { Viewport.TopLeftX, Viewport.TopLeftY };
+		m_CbFinal.BloomIntensity = 1.25f;
+		m_CbFinal.BaseIntensity = 1.f;
+		m_CbFinal.BloomSaturation = 1.f;
+		m_CbFinal.BaseSaturation = 1.f;
+		hr = m_pD3DC->Map(m_BufConstFinal.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped);
+		memcpy(Mapped.pData, &m_CbFinal, sizeof(m_CbFinal));
+		m_pD3DC->Unmap(m_BufConstFinal.Get(), 0);
+
+		m_pD3DC->PSSetShader(m_PSFinal.Get(), nullptr, 0);
+		m_pD3DC->PSSetConstantBuffers(0, 1, &m_BufConstFinal.pBuffer);
+		ID3D11ShaderResourceView* const pSrv[]
+		{
+			m_SrvRenderResult.Get(),
+			m_SrvMid1.Get(),
+		};
+		m_pD3DC->PSSetShaderResources(0, 2, pSrv);
+
+		m_pD3DC->Draw(6, 0);
+
+		//m_CbLight.ToUV = { 1.f / m_cxD3DTx, 1.f / m_cyD3DTx };
+		//m_CbLight.OffsetUV = { Viewport.TopLeftX, Viewport.TopLeftY };
+		//m_pD3DC->Map(m_BufConstLight.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped);
+		//memcpy(Mapped.pData, &m_CbLight, sizeof(m_CbLight));
+		//m_pD3DC->Unmap(m_BufConstLight.Get(), 0);
+
+		//m_pD3DC->Draw(6, 0);
+	}
+	return 0;
+#if SSO_WINRT
+	case Dui::RE_COMMIT:
+		m_pDcDevice->Commit();
+		return 0;
+#endif// SSO_WINRT
 	}
 	return 0;
 }
-#endif// SSO_WINRT
 
 void CWndMain::Tick(int iMs)
 {

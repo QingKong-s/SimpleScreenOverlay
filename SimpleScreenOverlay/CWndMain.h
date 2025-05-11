@@ -22,6 +22,66 @@ private:
 
 	CApp::HSlot m_hSlot{};
 
+
+
+	ID3D11DeviceContext* m_pD3DC{};
+	int m_cxD3DTx{}, m_cyD3DTx{};
+	ID3D11BlendState* m_pD3DBS{};
+
+	EzDx::CTexture m_TexMid1{};
+	EzDx::CRenderTargetView m_RtvMid1{};
+	EzDx::CShaderResourceView m_SrvMid1{};
+
+	EzDx::CTexture m_TexMid2{};
+	EzDx::CRenderTargetView m_RtvMid2{};
+	EzDx::CShaderResourceView m_SrvMid2{};
+
+	EzDx::CTexture m_TexRenderResult{};
+	EzDx::CRenderTargetView m_RtvRenderResult{};
+	EzDx::CShaderResourceView m_SrvRenderResult{};
+	IDXGISurface* m_pDxgiSfcRenderResult{};
+
+	EzDx::CSampler m_Sampler{};
+	EzDx::CShader<EzDx::PS_T> m_PSLight{}, m_PSBlur{},
+		m_PSFinal{}, m_PSBitBlt{};
+	EzDx::CVSAndInputLayout m_VSBitBlt{};
+
+	struct alignas(16) CB_BITBLT
+	{
+		DirectX::XMFLOAT2 ToUV;
+		DirectX::XMFLOAT2 OffsetUV;
+	};
+	struct alignas(16) CB_LIGHT
+	{
+		DirectX::XMFLOAT2 ToUV;
+		DirectX::XMFLOAT2 OffsetUV;
+		float Threshold;
+	};
+	struct alignas(16) CB_BLUR
+	{
+		DirectX::XMFLOAT2 ToUV;
+		DirectX::XMFLOAT2 OffsetUV;
+		DirectX::XMFLOAT2 Direction;
+		float Radius;
+		float Sigma;
+	};
+	struct alignas(16) CB_FINAL
+	{
+		DirectX::XMFLOAT2 ToUV;
+		DirectX::XMFLOAT2 OffsetUV;
+		float BaseIntensity;
+		float BaseSaturation;
+		float BloomIntensity;
+		float BloomSaturation;
+	};
+	CB_BITBLT m_CbBitBlt{};
+	CB_LIGHT m_CbLight{};
+	CB_BLUR m_CbBlur{};
+	CB_FINAL m_CbFinal{};
+	EzDx::CBuffer m_BufConstBitBlt{}, m_BufConstLight{},
+		m_BufConstBlur{}, m_BufConstFinal{};
+	EzDx::CBuffer m_BufVertex{};
+
 #if SSO_WINRT
 	IInteropCompositorFactoryPartner* m_pInteropFactory{};
 	IDCompositionDesktopDevice* m_pDcDevice{};
@@ -40,12 +100,14 @@ private:
 	void OnInput(WPARAM wParam, LPARAM lParam);
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+
+	void SdEnsureTextureDimension(int cx, int cy);
+
+	void SdInitD3D();
 public:
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-#if SSO_WINRT
 	LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e);
-#endif
 
 	void STDMETHODCALLTYPE Tick(int iMs);
 

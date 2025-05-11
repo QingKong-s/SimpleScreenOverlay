@@ -167,6 +167,14 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
+		static ID2D1Bitmap* pbmp;
+		if (!pbmp)
+		{
+			eck::LoadD2dBitmap(LR"(E:\Desktop\Temp\1.jpg)", m_pDC, pbmp);
+		}
+		
+		/*m_pBrush->SetColor({ 1.f,1.f,1.f,1.f });
+		m_pDC->FillRectangle(ps.rcfClipInElem, m_pBrush);*/
 		//===聚光灯
 		if (App->GetOpt().bSpotLight &&
 			(m_bShowSpotLight || m_bSpotLightAnimating))
@@ -288,6 +296,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC1->DrawGeometryRealization(m_TcWatermark.GetGeometryRealization(),
 				m_pBrush);
 		}
+		//m_pDC1->DrawBitmap(pbmp, GetViewRectF());
 		EndPaint(ps);
 	}
 	return 0;

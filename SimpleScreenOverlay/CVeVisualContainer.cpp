@@ -295,6 +295,16 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 	{
 		m_fSpotLightMaxRadius = std::max(GetWidthF(), GetHeightF()) / 2.f;
+		RECT rcKs2;
+		rcKs2.right = GetWidth() / 2;
+		rcKs2.left = (GetWidth() - rcKs2.right) / 2;
+		rcKs2.right += rcKs2.left;
+
+		rcKs2.bottom = VeCyKeyStroke2;
+		rcKs2.top = GetHeight() - rcKs2.bottom - 10;
+		rcKs2.bottom += rcKs2.top;
+
+		m_KeyStroke2.SetRect(rcKs2);
 	}
 	break;
 
@@ -340,13 +350,8 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			VeCxKeyStroke, VeCyKeyStroke, this);
 		m_KeyStroke.SetTextFormat(pTfKeyStroke);
 
-		eck::RCWH rcKs2;
-		rcKs2.cx = GetWidth() / 2;
-		rcKs2.x = (GetWidth() - rcKs2.cx) / 2;
-		rcKs2.cy = VeCyKeyStroke2;
-		rcKs2.y = GetHeight() - rcKs2.cy - 10;
 		m_KeyStroke2.Create(nullptr, Dui::DES_VISIBLE, 0,
-			rcKs2.x, rcKs2.y, rcKs2.cx, rcKs2.cy, this);
+			0, 0, 0, 0, this);
 		m_KeyStroke2.SetTextFormat(pTfKeyStroke);
 
 		pTfKeyStroke->Release();

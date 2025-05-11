@@ -168,6 +168,22 @@ void CWndMain::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	}
 }
 
+void CWndMain::RePosWindow()
+{
+	const auto hMon = eck::GetPrimaryMonitor();
+	MONITORINFO mi;
+	mi.cbSize = sizeof(mi);
+	GetMonitorInfoW(hMon, &mi);
+	SetWindowPos(HWnd, nullptr,
+		mi.rcWork.left, mi.rcWork.top,
+		mi.rcWork.right - mi.rcWork.left,
+		mi.rcWork.bottom - mi.rcWork.top,
+		SWP_NOZORDER | SWP_NOACTIVATE);
+	const RECT rc{ 0,0,GetClientWidthLog(),GetClientHeightLog() };
+	m_MenuContainer.SetRect(rc);
+	m_VisualContainer.SetRect(rc);
+}
+
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -178,6 +194,10 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SETTINGCHANGE:
 	{
+		if (wParam == SPI_SETWORKAREA)
+			RePosWindow();
+		if (lParam && eck::TcsEqual((PCWSTR)lParam, L"TraySettings"))
+			RePosWindow();
 		eck::MsgOnSettingChangeFixDpiAwareV2(hWnd, wParam, lParam);
 		if (eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam, TRUE))
 		{
@@ -187,6 +207,10 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
+
+	case WM_DISPLAYCHANGE:
+		RePosWindow();
+		break;
 
 	case WM_CREATE:
 	{
@@ -215,7 +239,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Bec.FxBlur->NameString().DupString(EckStrAndLen(L"Blur"));
 		D2D1_COLOR_F crTint{ 1.f,1.f,1.f }, crLuma;
 		eck::BecGetEffectiveColor(crTint, crLuma, 1.f, 0.85f);
-		Bec.Connect(crTint);
+		Bec.Connect(crTint, BlurStdDev);
 		auto Factory{ m_Compositor.CreateEffectFactory(
 			Bec.GetOutputEffect().as<winrt::Windows::Graphics::Effects::IGraphicsEffect>(),
 			{ L"Blur.Deviation" }) };
@@ -230,13 +254,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
 		m_pCompMenuSwitch = new Dui::CCompositorPageAn{};
 		m_pCompMenuSwitch->InitAsTranslationOpacity();
-		POINT pt{ GetClientWidth(),GetClientHeight() };
-		Phy2Log(pt);
+		const auto cx = GetClientWidthLog();
+		const auto cy = GetClientHeightLog();
 		// 保证VisualContainer的Z序低于MenuContainer
 		m_VisualContainer.Create(nullptr, 0, 0,
-			0, 0, pt.x, pt.y, nullptr, this);
+			0, 0, cx, cy, nullptr, this);
 		m_MenuContainer.Create(nullptr, 0, 0,
-			0, 0, pt.x, pt.y, nullptr, this);
+			0, 0, cx, cy, nullptr, this);
 		m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
 		RegisterTimeLine(this);
 
@@ -359,11 +383,11 @@ void CWndMain::SwitchMenuShowing(BOOL bShow)
 		if (bShow)
 		{
 			An.InsertKeyFrame(0.f, 0.f);
-			An.InsertKeyFrame(1.f, 20.f);
+			An.InsertKeyFrame(1.f, BlurStdDev);
 		}
 		else
 		{
-			An.InsertKeyFrame(0.f, 20.f);
+			An.InsertKeyFrame(0.f, BlurStdDev);
 			An.InsertKeyFrame(1.f, 0.f);
 		}
 		m_BkDropBrush.StartAnimation(L"Blur.Deviation", An);

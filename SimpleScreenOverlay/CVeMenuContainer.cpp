@@ -12,6 +12,7 @@ constexpr static PCWSTR MenuTitle[]
 enum class MProgram
 {
 	Exit,
+	SetAutoRun,
 };
 enum class MRender
 {
@@ -46,7 +47,8 @@ struct ITEM_DESC
 
 constexpr static ITEM_DESC ItemProgram[]
 {
-	{ L"退出程序"sv,{} },
+	{ L"退出程序"sv,L"关闭程序并保存设置"sv },
+	{ L"开机自启动"sv,L"设置一个计划任务，使程序开机时自动启动"sv },
 };
 
 constexpr static ITEM_DESC ItemRender[]
@@ -65,13 +67,13 @@ constexpr static ITEM_DESC ItemRender[]
 };
 constexpr static ITEM_DESC ItemTools[]
 {
-	{ L"重启资源管理器"sv },
+	{ L"重启资源管理器"sv,L"NtTerminateProcess(hExplorer, 2)" },
 	{ L"计算器"sv },
 	{ L"命令提示符"sv },
 	{ L"注册表编辑器"sv },
 	{ L"组策略编辑器"sv },
 	{ L"本地用户和组"sv },
-	{ L"桌面"sv },
+	{ L"桌面"sv,L"打开桌面文件夹"sv },
 };
 
 constexpr const ITEM_DESC& GetItemDesc(int idxMenu, int idx)
@@ -138,7 +140,11 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (p->idx < 0)
 			{
 				m_pTlTip.Clear();
-				goto Exit;
+			Exit:;
+				auto rc{ m_rcTip };
+				ElemToClient(rc);
+				InvalidateRect(rc);
+				return 0;
 			}
 			const auto idxMenu = int((CVeFunctionMenu*)wParam - m_MenuBox);
 			const auto& e = GetItemDesc(idxMenu, p->idx);
@@ -147,6 +153,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				GetWidthF(), GetHeightF(), m_pTlTip.AddrOfClear());
 			if (!m_pTlTip.Get())
 				goto Exit;
+			const auto rcOld{ m_rcTip };
 			DWRITE_TEXT_METRICS tm;
 			m_pTlTip->GetMetrics(&tm);
 			D2D1_RECT_F rc;
@@ -158,9 +165,11 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			rc.bottom = rc.top + tm.height;
 			eck::CeilRect(rc, m_rcTip);
 			eck::InflateRect(m_rcTip, VeCxyMenuTipMargin, VeCxyMenuTipMargin);
+			auto rcNew{ m_rcTip };
+			eck::UnionRect(rcNew, rcNew, rcOld);
+			ElemToClient(rcNew);
+			InvalidateRect(rcNew);
 		}
-	Exit:
-		InvalidateRect(m_rcTip);
 		return 0;
 
 		case Dui::LTE_ITEMCHANED:
@@ -172,6 +181,16 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				switch ((MProgram)p->idx)
 				{
+				case MProgram::SetAutoRun:
+				{
+					Opt.bAutoRun = bSel;
+					auto uFlags = eck::AutoRunType::TaskScheduler;
+					if (App->IsAdmin())
+						uFlags |= eck::AutoRunType::RunAdmin;
+					eck::SetAutoRun(L"qk_s_simplescreenoverlay",
+						bSel, uFlags);
+				}
+				return FALSE;
 				case MProgram::Exit:// 此时在临界区中，另起一下操作防止死锁
 					eck::GetThreadCtx()->Callback.EnQueueCallback([this]
 						{
@@ -303,6 +322,8 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MenuRender.SetItemState((int)MRender::Ruler, Dui::LEIF_SELECTED);
 		if (Opt.bWatermark)
 			MenuRender.SetItemState((int)MRender::Watermark, Dui::LEIF_SELECTED);
+		if (Opt.bAutoRun)
+			MenuProgram.SetItemState((int)MProgram::SetAutoRun, Dui::LEIF_SELECTED);
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;

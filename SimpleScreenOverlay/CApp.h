@@ -107,6 +107,7 @@ private:
 		BOOLEAN bTime;
 		BOOLEAN bWndTip;
 		BOOLEAN bBlurBkg;
+		BOOLEAN bAutoRun;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;
@@ -115,8 +116,8 @@ private:
 		eck::CRefStrW rsWatermark;
 	};
 
-
 	BOOL m_bDarkMode{};
+	BOOL m_bAdmin{};
 	IDWriteTextFormat* m_pTfCommon{};
 	OPT m_Opt{};
 
@@ -143,6 +144,13 @@ public:
 	EckInlineNdCe auto& GetSignal() { return m_Sig; }
 
 	EckInlineCe void SetDarkMode(BOOL bDark) { m_bDarkMode = bDark; }
+
+	void OptLoad();
+	void OptSave();
+
+	EckInlineNdCe BOOL IsAdmin() const { return m_bAdmin; }
+	// 仅供初始化时使用
+	void SetAdmin(BOOL bAdmin) { m_bAdmin = bAdmin; }
 };
 
 extern CApp* App;

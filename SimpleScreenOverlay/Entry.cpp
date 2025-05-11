@@ -32,8 +32,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			(int)iRetInit, dwErr), L"Error", MB_ICONERROR);
 		return 0;
 	}
+	const auto bAdmin = IsNTAdmin(0, nullptr);
 #ifndef _DEBUG
-	if (IsNTAdmin(0, nullptr) && !eck::UiaIsAcquired())
+	if (bAdmin && !eck::UiaIsAcquired())
 	{
 		eck::UIA uia;
 		if (NT_SUCCESS(eck::UiaTryAcquire(uia)))
@@ -63,6 +64,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	App = new CApp{};
 	App->Init();
+	App->SetAdmin(bAdmin);
 
 	const auto pWnd = new CWndMain{};
 	const auto hMon = eck::GetOwnerMonitor(nullptr);
@@ -97,6 +99,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			DispatchMessageW(&msg);
 		}
 	}
+	App->OptSave();
 	delete pWnd;
 	delete App;
 	eck::ThreadUnInit();

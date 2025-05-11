@@ -5,6 +5,8 @@
 class CWndMain final : public Dui::CDuiWnd, public eck::CFixedTimeLine
 {
 private:
+	constexpr static float BlurStdDev = 20.0f;
+
 	eck::THREADCTX* m_ptcUiThread{};
 
 	CVeMenuContainer m_MenuContainer{};
@@ -16,9 +18,11 @@ private:
 	ULONGLONG m_dwLastCtrlTick{};
 	BOOLEAN m_bKeyDown[256]{};
 
-	BITBOOL m_bShowMenu : 1{};
-	BITBOOL m_bMenuAn : 1{};
+	BOOLEAN m_bShowMenu{};
+	BOOLEAN m_bMenuAn{};
 	BOOLEAN m_bBlurBkgEnabled{ 2 };
+
+	UINT m_uMsgTaskbarCreated{};
 
 	CApp::HSlot m_hSlot{};
 
@@ -40,6 +44,8 @@ private:
 	void OnInput(WPARAM wParam, LPARAM lParam);
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+
+	void RePosWindow();
 public:
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

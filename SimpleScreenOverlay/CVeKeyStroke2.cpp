@@ -274,8 +274,12 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	{
 		if (!App->GetOpt().bKeyStroke2)
 			break;
-		ECK_DUILOCK;
-		IkOnKeyDown(n.Vk);
+		if (n.Vk < ARRAYSIZE(KeyName) &&
+			!KeyName[n.Vk].empty())
+		{
+			ECK_DUILOCK;
+			IkOnKeyDown(n.Vk);
+		}
 	}
 	break;
 	case Notify::GlobalKeyUp:
@@ -283,8 +287,12 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	{
 		if (!App->GetOpt().bKeyStroke2)
 			break;
-		ECK_DUILOCK;
-		IkOnKeyUp(n.Vk);
+		if (n.Vk < ARRAYSIZE(KeyName) &&
+			!KeyName[n.Vk].empty())
+		{
+			ECK_DUILOCK;
+			IkOnKeyUp(n.Vk);
+		}
 	}
 	break;
 	case Notify::GlobalMouseMove:

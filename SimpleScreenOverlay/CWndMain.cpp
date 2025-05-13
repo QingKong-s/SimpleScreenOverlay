@@ -83,7 +83,7 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 		}
 		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP)
 		{
-			eNotify[cEvt] = Notify::GlobalMouseDown;
+			eNotify[cEvt] = Notify::GlobalMouseUp;
 			n[cEvt].Vk = VK_XBUTTON1;
 			++cEvt;
 		}
@@ -95,7 +95,7 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 		}
 		if (ri.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP)
 		{
-			eNotify[cEvt] = Notify::GlobalMouseDown;
+			eNotify[cEvt] = Notify::GlobalMouseUp;
 			n[cEvt].Vk = VK_XBUTTON2;
 			++cEvt;
 		}

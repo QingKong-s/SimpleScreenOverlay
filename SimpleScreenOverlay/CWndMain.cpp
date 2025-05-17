@@ -24,8 +24,8 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 	UINT cbBuf{ sizeof(ri) };
 	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
 		&ri, &cbBuf, sizeof(RAWINPUTHEADER));
-	Notify eNotify[11];
-	SSONOTIFY n[11]{};
+	Notify eNotify[12];
+	SSONOTIFY n[12]{};
 	size_t cEvt{};
 	switch (ri.header.dwType)
 	{
@@ -115,20 +115,31 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 			n[cEvt].Vk = ri.data.keyboard.VKey;
 			const auto bRepeat = n[cEvt].bRepeat;
 			++cEvt;
-			if (!bRepeat && (
+			if (
 				ri.data.keyboard.VKey == VK_CONTROL ||
 				ri.data.keyboard.VKey == VK_LCONTROL ||
-				ri.data.keyboard.VKey == VK_RCONTROL))
+				ri.data.keyboard.VKey == VK_RCONTROL)
 			{
-				const auto t = NtGetTickCount64();
-				if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime())
+				BOOL bDbCtrl{};
+				if (!bRepeat)
 				{
-					eNotify[cEvt] = Notify::DoubleCtrl;
-					n[cEvt].bRepeat = TRUE;
+					const auto t = NtGetTickCount64();
+					if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime())
+					{
+						eNotify[cEvt] = Notify::DoubleCtrl;
+						n[cEvt].bRepeat = TRUE;
+						++cEvt;
+						bDbCtrl = TRUE;
+					}
+					m_dwLastCtrlTick = NtGetTickCount64();
+				}
+				if (!bDbCtrl)
+				{
+					eNotify[cEvt] = Notify::SingleCtrl;
 					++cEvt;
 				}
-				m_dwLastCtrlTick = NtGetTickCount64();
 			}
+			
 			if (ri.data.keyboard.VKey == VK_F7)
 			{// HACK
 				SwitchMenuShowing(!m_bShowMenu);
@@ -219,6 +230,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		BOOL bExcludeFromPeek{ TRUE };
 		DwmSetWindowAttribute(hWnd, DWMWA_EXCLUDED_FROM_PEEK,
 			&bExcludeFromPeek, sizeof(BOOL));
+		SetDrawDirtyRect(TRUE);
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,

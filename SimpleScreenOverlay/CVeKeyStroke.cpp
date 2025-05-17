@@ -96,6 +96,8 @@ void CVeKeyStroke::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	break;
 	case Notify::GlobalMouseMove:
 	{
+		if (!App->GetOpt().bKeyStroke)
+			break;
 		POINT pt{ n.pt };
 		ScreenToClient(GetWnd()->HWnd, &pt);
 		GetWnd()->Phy2Log(pt);

@@ -27,6 +27,9 @@ enum class MRender
 	WindowTip,
 	Ruler,
 	Watermark,
+	Click,
+	LocateCursor,
+	CursorPos,
 };
 enum class MTools
 {
@@ -63,7 +66,10 @@ constexpr static ITEM_DESC ItemRender[]
 	{ L"窗口高亮"sv, L"在光标所在窗口的周围显示一个方框"sv },
 	{ L"窗口提示"sv, L"显示在光标所在窗口的详细信息"sv },
 	{ L"标尺"sv, L"显示光标所在窗口坐标内的标尺"sv },
-	{ L"水印"sv, L"在屏幕中央显示水印"sv }
+	{ L"水印"sv, L"在屏幕中央显示水印"sv },
+	{ L"点击提示"sv, L"显示光标点击状态"sv },
+	{ L"定位光标"sv, L"按下Ctrl时显示光标位置"sv },
+	{ L"光标位置"sv, L"在光标处绘制一个圆"sv },
 };
 constexpr static ITEM_DESC ItemTools[]
 {
@@ -215,6 +221,9 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case MRender::WindowTip:	Opt.bWndTip = bSel;			break;
 				case MRender::Ruler:		Opt.bRuler = bSel;			break;
 				case MRender::Watermark:	Opt.bWatermark = bSel;		break;
+				case MRender::Click:		Opt.bShowClick = bSel;		break;
+				case MRender::LocateCursor:	Opt.bLocateCursorWithCtrl = bSel;	break;
+				case MRender::CursorPos:	Opt.bShowCursorPos = bSel;	break;
 				}
 				SSONOTIFY n{};
 				App->GetSignal().Emit(Notify::OptionsChanged, n);
@@ -324,6 +333,12 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MenuRender.SetItemState((int)MRender::Watermark, Dui::LEIF_SELECTED);
 		if (Opt.bAutoRun)
 			MenuProgram.SetItemState((int)MProgram::SetAutoRun, Dui::LEIF_SELECTED);
+		if (Opt.bShowClick)
+			MenuRender.SetItemState((int)MRender::Click, Dui::LEIF_SELECTED);
+		if (Opt.bLocateCursorWithCtrl)
+			MenuRender.SetItemState((int)MRender::LocateCursor, Dui::LEIF_SELECTED);
+		if (Opt.bShowCursorPos)
+			MenuRender.SetItemState((int)MRender::CursorPos, Dui::LEIF_SELECTED);
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;

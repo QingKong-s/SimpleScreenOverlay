@@ -7,6 +7,7 @@ enum class Notify
 	GlobalMouseDown,	// Vk
 	GlobalMouseUp,		// Vk
 	DoubleCtrl,			// 
+	SingleCtrl,			//
 	GlobalMouseMove,	// pt
 	OptionsChanged,		//
 };
@@ -23,12 +24,6 @@ struct SSONOTIFY
 		POINT pt;
 	};
 };
-
-#ifdef _DEBUG
-#define SSO_USE_LOWLEVEL_HOOK 0
-#else
-#define SSO_USE_LOWLEVEL_HOOK 1
-#endif
 
 class CApp
 {
@@ -83,7 +78,7 @@ public:
 		eck::ColorrefToD2dColorF(RGB(110, 111, 112), 0.65f),
 
 		{ 1.f,1.f,1.f,0.6f },
-		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.3f),
+		eck::ColorrefToD2dColorF(RGB(80, 80, 80), 0.3f),
 		eck::ColorrefToD2dColorF(RGB(20, 150, 150), 0.3f),
 
 		{ 1.f,1.f,1.f,0.1f },
@@ -108,10 +103,16 @@ private:
 		BOOLEAN bWndTip;
 		BOOLEAN bBlurBkg;
 		BOOLEAN bAutoRun;
+		BOOLEAN bShowClick;
+		BOOLEAN bShowCursorPos;
+		BOOLEAN bLocateCursorWithCtrl;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;
 		float fSpotLightRadius;
+		float fClickRadius;
+		float fCursorPosRadius;
+		float fLocateCursorRadius;
 
 		eck::CRefStrW rsWatermark;
 	};

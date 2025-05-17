@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include "CApp.h"
 
 CApp* App{};
 
@@ -27,7 +28,8 @@ void CApp::OptLoad()
 	m_Opt.bKeyStroke2 = Ini.GetKeyValue(Sec, L"KeyStroke2"sv).GetBool(TRUE);
 	m_Opt.bSpotLight = Ini.GetKeyValue(Sec, L"SpotLight"sv).GetBool(TRUE);
 	m_Opt.bWndHilight = Ini.GetKeyValue(Sec, L"WndHilight"sv).GetBool(FALSE);
-	m_Opt.bWndHilightDetectChild = Ini.GetKeyValue(Sec, L"WndHilightDetectChild"sv).GetBool(TRUE);
+	m_Opt.bWndHilightDetectChild = Ini.GetKeyValue(Sec,
+		L"WndHilightDetectChild"sv).GetBool(TRUE);
 	m_Opt.bRuler = Ini.GetKeyValue(Sec, L"Ruler"sv).GetBool(FALSE);
 	m_Opt.bWatermark = Ini.GetKeyValue(Sec, L"Watermark"sv).GetBool(FALSE);
 	m_Opt.bTime = Ini.GetKeyValue(Sec, L"Time"sv).GetBool(TRUE);
@@ -39,7 +41,18 @@ void CApp::OptLoad()
 		L"CrosshairCursorGap"sv).GetDouble(20.f);
 	m_Opt.fSpotLightRadius = (float)Ini.GetKeyValue(Sec,
 		L"SpotLightRadius"sv).GetDouble(40.f);
-	Ini.GetKeyValue(Sec, L"WatermarkText"sv).GetString(m_Opt.rsWatermark, L"QKSOFT"sv);
+	Ini.GetKeyValue(Sec, L"WatermarkText"sv).GetString(m_Opt.rsWatermark, L"E X A M P L E"sv);
+	m_Opt.bShowClick = Ini.GetKeyValue(Sec, L"ShowClick"sv).GetBool(TRUE);
+	m_Opt.fClickRadius = (float)Ini.GetKeyValue(Sec,
+		L"ClickRadius"sv).GetDouble(50.f);
+	m_Opt.bLocateCursorWithCtrl = Ini.GetKeyValue(Sec,
+		L"LocateCursorWithCtrl"sv).GetBool(TRUE);
+	m_Opt.fLocateCursorRadius = (float)Ini.GetKeyValue(Sec,
+		L"LocateCursorRadius"sv).GetDouble(120.f);
+	m_Opt.bShowCursorPos = Ini.GetKeyValue(Sec,
+		L"ShowCursorPos"sv).GetBool(FALSE);
+	m_Opt.fCursorPosRadius = (float)Ini.GetKeyValue(Sec,
+		L"CursorPosRadius"sv).GetDouble(30.f);
 }
 
 void CApp::OptSave()
@@ -80,6 +93,18 @@ void CApp::OptSave()
 	rsTmp.Format(L"%f", m_Opt.fSpotLightRadius);
 	Ini.SetKeyValue(Sec, L"SpotLightRadius"sv, rsTmp.ToStringView());
 	Ini.SetKeyValue(Sec, L"WatermarkText"sv, m_Opt.rsWatermark.ToStringView());
+	rsTmp.Format(L"%d", m_Opt.bShowClick);
+	Ini.SetKeyValue(Sec, L"ShowClick"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%f", m_Opt.fClickRadius);
+	Ini.SetKeyValue(Sec, L"ClickRadius"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%d", m_Opt.bLocateCursorWithCtrl);
+	Ini.SetKeyValue(Sec, L"LocateCursorWithCtrl"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%f", m_Opt.fLocateCursorRadius);
+	Ini.SetKeyValue(Sec, L"LocateCursorRadius"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%d", m_Opt.bShowCursorPos);
+	Ini.SetKeyValue(Sec, L"ShowCursorPos"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%f", m_Opt.fCursorPosRadius);
+	Ini.SetKeyValue(Sec, L"CursorPosRadius"sv, rsTmp.ToStringView());
 	rsTmp.Clear();
 	Ini.Save(rsTmp);
 	eck::WriteToFile((eck::GetRunningPath() + L"\\Options.ini").Data(),

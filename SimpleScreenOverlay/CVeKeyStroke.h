@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "CApp.h"
+
 class CVeKeyStroke final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:

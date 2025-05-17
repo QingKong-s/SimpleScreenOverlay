@@ -29,6 +29,8 @@ enum
 
 	VeCyMenuTipBottomMarginPct = 15,
 	VeCxyMenuTipMargin = 5,
+
+	VeCxClickStroke = 4,
 };
 
 enum

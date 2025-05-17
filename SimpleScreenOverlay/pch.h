@@ -44,6 +44,5 @@ using namespace Windows::UI::Composition;
 using namespace Windows::UI::Composition::Desktop;
 #endif
 
-#include "CApp.h"
 #include "CGrTextCache.h"
 #include "Utils.h"

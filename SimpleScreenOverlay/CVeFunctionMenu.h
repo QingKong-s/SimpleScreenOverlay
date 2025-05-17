@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "CApp.h"
 #include "VeDef.h"
 #include "CVeMenuList.h"
 

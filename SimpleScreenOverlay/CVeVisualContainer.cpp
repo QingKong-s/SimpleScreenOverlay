@@ -13,13 +13,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		if (App->GetOpt().bSpotLight)
 		{
 			ECK_DUILOCK;
-			// 先更新一次，防止脏坐标
-			POINT pt;
-			GetCursorPos(&pt);
-			ScreenToClient(GetWnd()->HWnd, &pt);
-			GetWnd()->Phy2Log(pt);
-			ClientToElem(pt);
-			m_ptCursor = { (float)pt.x, (float)pt.y };
+			UpdateCursorPos();// 先更新一次，防止脏坐标
 
 			ECKBOOLNOT(m_bShowSpotLight);
 			m_bSpotLightReverse = !!!m_bShowSpotLight;
@@ -28,8 +22,22 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		}
 	}
 	break;
+	case Notify::SingleCtrl:
+	{
+		if (App->GetOpt().bLocateCursorWithCtrl)
+		{
+			ECK_DUILOCK;
+			UpdateCursorPos();// 先更新一次，防止脏坐标
+
+			m_bLocatingCursor = TRUE;
+			m_msCursorLocateAni = 0.f;
+			GetWnd()->WakeRenderThread();
+		}
+	}
+	break;
 	case Notify::GlobalMouseDown:
 	{
+		BOOL bWake{};
 		// 聚光灯
 		if (App->GetOpt().bSpotLight && m_bShowSpotLight)
 		{
@@ -37,25 +45,52 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			m_bShowSpotLight = FALSE;
 			m_bSpotLightReverse = TRUE;
 			m_bSpotLightAnimating = TRUE;
-			GetWnd()->WakeRenderThread();
+			bWake = TRUE;
 		}
+		// 点击显示
+		if (App->GetOpt().bShowClick)
+		{
+			ClickState eState;
+			switch (n.Vk)
+			{
+			case VK_LBUTTON: eState = ClickState::L; break;
+			case VK_RBUTTON: eState = ClickState::R; break;
+			case VK_MBUTTON: eState = ClickState::M; break;
+			default: goto NoClick;
+			}
+			ECK_DUILOCK;
+			bWake = m_vClick.empty();
+			m_vClick.emplace_back(m_ptCursor, eState);
+			UpdateCursorPos();// 先更新一次，防止脏坐标
+		}
+	NoClick:;
+		if (bWake)
+			GetWnd()->WakeRenderThread();
 	}
 	break;
 	case Notify::GlobalMouseMove:
 	{
 		ECK_DUILOCK;
+		auto pt{ n.pt };
+		ScreenToClient(GetWnd()->HWnd, &pt);
+		GetWnd()->Phy2Log(pt);
+		ClientToElem(pt);
+		const D2D1_POINT_2F ptNew{ (float)pt.x, (float)pt.y };
+
 		BOOL bUpdate{};
 		D2D1_RECT_F rcUpdate{};
 		//===聚光灯
-		if (App->GetOpt().bSpotLight)
+		if (m_bShowSpotLight && App->GetOpt().bSpotLight)
 		{
-			auto pt{ n.pt };
-			ScreenToClient(GetWnd()->HWnd, &pt);
-			GetWnd()->Phy2Log(pt);
-			ClientToElem(pt);
-			m_ptCursor = { (float)pt.x, (float)pt.y };
-			if (!IsValid() && m_bShowSpotLight)
-				InvalidateRect();
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					m_ptCursor.x - m_fCursorLocateRadius,m_ptCursor.y - m_fCursorLocateRadius,
+					m_ptCursor.x + m_fCursorLocateRadius,m_ptCursor.y + m_fCursorLocateRadius
+				});
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					ptNew.x - m_fCursorLocateRadius,ptNew.y - m_fCursorLocateRadius,
+					ptNew.x + m_fCursorLocateRadius,ptNew.y + m_fCursorLocateRadius
+				});
+			bUpdate = TRUE;
 		}
 		//===窗口高亮
 		if (App->GetOpt().bWndHilight)
@@ -134,6 +169,41 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			}
 		}
 	SkipUpdateWndHilight:;
+		//===光标定位
+		if (m_bLocatingCursor && App->GetOpt().bLocateCursorWithCtrl)
+		{
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					m_ptCursor.x - m_fCursorLocateRadius,m_ptCursor.y - m_fCursorLocateRadius,
+					m_ptCursor.x + m_fCursorLocateRadius,m_ptCursor.y + m_fCursorLocateRadius
+				});
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					ptNew.x - m_fCursorLocateRadius,ptNew.y - m_fCursorLocateRadius,
+					ptNew.x + m_fCursorLocateRadius,ptNew.y + m_fCursorLocateRadius
+				});
+			bUpdate = TRUE;
+		}
+		if (App->GetOpt().bShowCursorPos)
+		{
+			const auto r = App->GetOpt().fCursorPosRadius;
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					m_ptCursor.x - r,m_ptCursor.y - r,
+					m_ptCursor.x + r,m_ptCursor.y + r
+				});
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					ptNew.x - r,ptNew.y - r,
+					ptNew.x + r,ptNew.y + r
+				});
+			bUpdate = TRUE;
+		}
+		m_ptCursor = ptNew;
+		if (bUpdate)
+		{
+			RECT rc;
+			eck::CeilRect(rcUpdate, rc);
+			ElemToClient(rc);
+			eck::InflateRect(rc, 3, 3);
+			InvalidateRect(rcUpdate);
+		}
 	}
 	break;
 	case Notify::OptionsChanged:
@@ -159,6 +229,99 @@ void CVeVisualContainer::CalcWindowTipPos(const D2D1_RECT_F& rcWnd,
 	ptTip.y = rcWnd.top + (float)VeCyWndTipMargin;
 }
 
+void CVeVisualContainer::UpdateCursorPos()
+{
+	POINT pt;
+	GetCursorPos(&pt);
+	ScreenToClient(GetWnd()->HWnd, &pt);
+	GetWnd()->Phy2Log(pt);
+	ClientToElem(pt);
+	m_ptCursor = { (float)pt.x, (float)pt.y };
+}
+
+void CVeVisualContainer::InitSpotLight()
+{
+	ComPtr<ID2D1EllipseGeometry> pGeoCircle;
+	constexpr D2D1_ELLIPSE Circle
+	{
+		{ SpotLightGeoRadius,SpotLightGeoRadius },
+		SpotLightGeoRadius,SpotLightGeoRadius
+	};
+	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
+	float xDpi, yDpi;
+	m_pDC->GetDpi(&xDpi, &yDpi);
+	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
+		D2D1::ComputeFlatteningTolerance(
+			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
+		&m_pGrSpotLight);
+}
+
+void CVeVisualContainer::InitClick()
+{
+	constexpr D2D1_ELLIPSE Circle
+	{
+		{ ClickGeoRadius,ClickGeoRadius },
+		ClickGeoRadius,ClickGeoRadius
+	};
+	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &m_pEllipseClick);
+
+	ComPtr<ID2D1StrokeStyle1> pStrokeStyle;
+	D2D1_STROKE_STYLE_PROPERTIES1 StrokeStyle{
+		.transformType = D2D1_STROKE_TRANSFORM_TYPE_FIXED };
+	eck::g_pD2dFactory->CreateStrokeStyle(StrokeStyle, nullptr, 0, &m_pStrokeStyleClick);
+}
+
+void CVeVisualContainer::InitCursorLocate()
+{
+	ComPtr<ID2D1EllipseGeometry> pGeoCircle;
+	constexpr D2D1_ELLIPSE Circle
+	{
+		{ CursorLocateGeoRadius,CursorLocateGeoRadius },
+		CursorLocateGeoRadius,CursorLocateGeoRadius
+	};
+	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
+	float xDpi, yDpi;
+	m_pDC->GetDpi(&xDpi, &yDpi);
+	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
+		D2D1::ComputeFlatteningTolerance(
+			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
+		&m_pGrCursorLocate);
+
+	ComPtr<ID2D1GradientStopCollection> pStop;
+	constexpr D2D1_GRADIENT_STOP Stop[]
+	{
+		{ 0.f,{} },
+		{ 0.8f,{} },
+		{ 0.94f,{1.f,1.f,1.f,0.5f} }
+	};
+	m_pDC1->CreateGradientStopCollection(Stop, ARRAYSIZE(Stop),
+		D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &pStop);
+	constexpr D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES BrushProp
+	{
+		{ CursorLocateGeoRadius,CursorLocateGeoRadius },{},
+		CursorLocateGeoRadius,CursorLocateGeoRadius
+	};
+	m_pDC->CreateRadialGradientBrush(BrushProp,
+		pStop.Get(), &m_pBrCursorLocate);
+}
+
+void CVeVisualContainer::InitCursorPos()
+{
+	ComPtr<ID2D1EllipseGeometry> pGeoCircle;
+	constexpr D2D1_ELLIPSE Circle
+	{
+		{ CursorGeoRadius,CursorGeoRadius },
+		CursorGeoRadius,CursorGeoRadius
+	};
+	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
+	float xDpi, yDpi;
+	m_pDC->GetDpi(&xDpi, &yDpi);
+	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
+		D2D1::ComputeFlatteningTolerance(
+			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
+		&m_pGrCursorPos);
+}
+
 LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -181,14 +344,14 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->GetTransform(&MatOld);
 			const auto fScale = std::max(
 				App->GetOpt().fSpotLightRadius,
-				m_fSpotLightMaxRadius * (1.f - m_kSpotLight)) / SpotLightGenRadius;
+				m_fSpotLightMaxRadius * (1.f - m_kSpotLight)) / SpotLightGeoRadius;
 			m_pDC->SetTransform(
 				D2D1::Matrix3x2F::Translation(
-					m_ptCursor.x - SpotLightGenRadius,
-					m_ptCursor.y - SpotLightGenRadius) *
+					m_ptCursor.x - SpotLightGeoRadius,
+					m_ptCursor.y - SpotLightGeoRadius) *
 				D2D1::Matrix3x2F::Scale(
 					fScale, fScale,
-					{ (float)m_ptCursor.x,(float)m_ptCursor.y }) *
+					{ m_ptCursor.x,m_ptCursor.y }) *
 				MatOld);
 			m_pDC1->DrawGeometryRealization(m_pGrSpotLight, m_pBrush);
 			m_pDC->SetTransform(MatOld);
@@ -288,6 +451,80 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC1->DrawGeometryRealization(m_TcWatermark.GetGeometryRealization(),
 				m_pBrush);
 		}
+		//===光标位置
+		if (App->GetOpt().bShowCursorPos)
+		{
+			D2D1::Matrix3x2F MatOld;
+			m_pDC->GetTransform(&MatOld);
+			const auto fScale =
+				App->GetOpt().fCursorPosRadius / CursorGeoRadius;
+			m_pDC->SetTransform(
+				D2D1::Matrix3x2F::Translation(
+					m_ptCursor.x - CursorGeoRadius,
+					m_ptCursor.y - CursorGeoRadius) *
+				D2D1::Matrix3x2F::Scale(
+					fScale, fScale,
+					{ m_ptCursor.x,m_ptCursor.y }) *
+				MatOld);
+			m_pBrush->SetColor(D2D1_COLOR_F{ 1.f,1.f,0.f,0.2f });
+			m_pDC1->DrawGeometryRealization(m_pGrCursorPos, m_pBrush);
+			m_pDC->SetTransform(MatOld);
+		}
+		//===点击显示
+		if (App->GetOpt().bShowClick)
+		{
+			D2D1::Matrix3x2F MatOld;
+			m_pDC->GetTransform(&MatOld);
+			for (const auto& e : m_vClick)
+			{
+				switch (e.eState)
+				{
+				case ClickState::L:
+					m_pBrush->SetColor(D2D1_COLOR_F{ 1.f,0.f,1.f,e.fAlpha });
+					break;
+				case ClickState::M:
+					m_pBrush->SetColor(D2D1_COLOR_F{ 0.f,1.f,0.f,e.fAlpha });
+					break;
+				case ClickState::R:
+					m_pBrush->SetColor(D2D1_COLOR_F{ 0.f,1.f,1.f,e.fAlpha });
+					break;
+				default: ECK_UNREACHABLE;
+				}
+				const auto fScale = e.fRadius / ClickGeoRadius;
+				m_pDC->SetTransform(
+					D2D1::Matrix3x2F::Translation(
+						e.ptCenter.x - ClickGeoRadius,
+						e.ptCenter.y - ClickGeoRadius) *
+					D2D1::Matrix3x2F::Scale(
+						fScale, fScale,
+						{ e.ptCenter.x,e.ptCenter.y }) *
+					MatOld);
+				const D2D1_ELLIPSE Ellipse{
+					{ e.ptCenter.x,e.ptCenter.y },
+					e.fRadius,e.fRadius };
+				m_pDC->DrawGeometry(m_pEllipseClick, m_pBrush,
+					(float)VeCxClickStroke, m_pStrokeStyleClick);
+			}
+			m_pDC->SetTransform(MatOld);
+		}
+		//===光标定位
+		if (m_bLocatingCursor && App->GetOpt().bLocateCursorWithCtrl)
+		{
+			D2D1::Matrix3x2F MatOld;
+			m_pDC->GetTransform(&MatOld);
+			const auto fScale = m_fCursorLocateRadius / CursorLocateGeoRadius;
+			m_pDC->SetTransform(
+				D2D1::Matrix3x2F::Translation(
+					m_ptCursor.x - SpotLightGeoRadius,
+					m_ptCursor.y - SpotLightGeoRadius) *
+				D2D1::Matrix3x2F::Scale(
+					fScale, fScale,
+					{ m_ptCursor.x,m_ptCursor.y }) *
+				MatOld);
+			m_pBrCursorLocate->SetOpacity(m_fCursorLocateAlpha);
+			m_pDC1->DrawGeometryRealization(m_pGrCursorLocate, m_pBrCursorLocate);
+			m_pDC->SetTransform(MatOld);
+		}
 		EndPaint(ps);
 	}
 	return 0;
@@ -313,20 +550,10 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pDC->QueryInterface(&m_pDC1);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 
-		ComPtr<ID2D1EllipseGeometry> pGeoCircle;
-		constexpr D2D1_ELLIPSE Circle
-		{
-			{ SpotLightGenRadius,SpotLightGenRadius },
-			SpotLightGenRadius,
-			SpotLightGenRadius
-		};
-		eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
-		float xDpi, yDpi;
-		m_pDC->GetDpi(&xDpi, &yDpi);
-		m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
-			D2D1::ComputeFlatteningTolerance(
-				D2D1::Matrix3x2F::Identity(),
-				xDpi, yDpi, 1.f), &m_pGrSpotLight);
+		InitSpotLight();
+		InitClick();
+		InitCursorLocate();
+		InitCursorPos();
 
 		m_hSlot = App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);
@@ -338,7 +565,6 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		const auto pTlWatermark = m_TcWatermark.GetTextLayout();
 		IDWriteTextLayout1* pTlWatermark1;
 		pTlWatermark->QueryInterface(&pTlWatermark1);
-		pTlWatermark1->SetCharacterSpacing(6, 6, 0, { 0,cchWatermark });
 		pTlWatermark1->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 		pTlWatermark1->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTlWatermark1->Release();
@@ -376,6 +602,9 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 {
+	DWRITE_TEXT_METRICS tm;
+	D2D1_RECT_F rcInvalid{};
+	const auto bPartialDirty = !m_bSpotLightAnimating;
 	if (m_bSpotLightAnimating)
 	{
 		if (m_bSpotLightReverse)
@@ -399,13 +628,75 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 			m_bWndHiliAnimating = FALSE;
 			k = 1.f;
 		}
+		if (bPartialDirty)
+			eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
 		m_rcWndHili.left = (m_rcWndHiliSrc.left * (1.f - k)) + (m_rcWndHiliDst.left * k);
 		m_rcWndHili.top = (m_rcWndHiliSrc.top * (1.f - k)) + (m_rcWndHiliDst.top * k);
 		m_rcWndHili.right = (m_rcWndHiliSrc.right * (1.f - k)) + (m_rcWndHiliDst.right * k);
 		m_rcWndHili.bottom = (m_rcWndHiliSrc.bottom * (1.f - k)) + (m_rcWndHiliDst.bottom * k);
-
+		if (bPartialDirty)
+			eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
+		if (bPartialDirty)
+		{
+			m_TcWndTip.GetTextLayout()->GetMetrics(&tm);
+			eck::UnionRect(rcInvalid, rcInvalid, {
+					m_ptWndTip.x,m_ptWndTip.y,
+					m_ptWndTip.x + tm.width,
+					m_ptWndTip.y + tm.height });
+		}
 		m_ptWndTip.x = (m_ptWndTipSrc.x * (1.f - k)) + (m_ptWndTipDst.x * k);
 		m_ptWndTip.y = (m_ptWndTipSrc.y * (1.f - k)) + (m_ptWndTipDst.y * k);
+		if (bPartialDirty)
+		{
+			eck::UnionRect(rcInvalid, rcInvalid, {
+					m_ptWndTip.x,m_ptWndTip.y,
+					m_ptWndTip.x + tm.width,
+					m_ptWndTip.y + tm.height });
+		}
 	}
-	InvalidateRect();
+	if (!m_vClick.empty())
+		for (size_t i{ m_vClick.size() - 1 }; i; --i)
+		{
+			auto& e = m_vClick[i];
+			e.ms += (float)iMs;
+			const auto k = eck::Easing::OutCubic(e.ms, 0.f, 1.f, 500.f);
+			if (k >= 1.f)
+			{
+				m_vClick.erase(m_vClick.begin() + i);
+				continue;
+			}
+			e.fRadius = (App->GetOpt().fClickRadius * k);
+			e.fAlpha = 1.f - k;
+			const auto r = e.fRadius + (float)VeCxClickStroke;
+			eck::UnionRect(rcInvalid, rcInvalid, {
+				e.ptCenter.x - r, e.ptCenter.y - r,
+				e.ptCenter.x + r, e.ptCenter.y + r });
+		}
+	if (m_bLocatingCursor)
+	{
+		m_msCursorLocateAni += (float)iMs;
+		auto k = eck::Easing::OutCubic(m_msCursorLocateAni, 0.f, 1.f, 700.f);
+		if (k >= 1.f)
+		{
+			m_bLocatingCursor = FALSE;
+			k = 1.f;
+		}
+		eck::UnionRect(rcInvalid, rcInvalid, {
+			m_ptCursor.x - m_fCursorLocateRadius, m_ptCursor.y - m_fCursorLocateRadius,
+			m_ptCursor.x + m_fCursorLocateRadius, m_ptCursor.y + m_fCursorLocateRadius });
+		m_fCursorLocateRadius = App->GetOpt().fLocateCursorRadius * (1.f - k);
+		eck::UnionRect(rcInvalid, rcInvalid, {
+			m_ptCursor.x - m_fCursorLocateRadius, m_ptCursor.y - m_fCursorLocateRadius,
+			m_ptCursor.x + m_fCursorLocateRadius, m_ptCursor.y + m_fCursorLocateRadius });
+		m_fCursorLocateAlpha = 1.f - k;
+	}
+	if (bPartialDirty)
+	{
+		RECT rc;
+		eck::CeilRect(rcInvalid, rc);
+		ElemToClient(rc);
+		InvalidateRect(rc);
+	}
+	else
+		InvalidateRect();
 }

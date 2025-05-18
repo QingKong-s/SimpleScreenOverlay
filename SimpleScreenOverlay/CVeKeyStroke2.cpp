@@ -311,13 +311,8 @@ void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 	{
 		ECK_DUILOCK;
 		SetVisible(App->GetOpt().bKeyStroke2);
-		if (App->GetOpt().bKeyStroke2)
-			SetTimer(IDT_KEYSTROKE2, TE_KEYSTROKE2);
-		else
-		{
+		if (!App->GetOpt().bKeyStroke2)
 			m_vItem.clear();
-			KillTimer(IDT_KEYSTROKE2);
-		}
 		if (App->GetOpt().bRainbowColor)
 			GetWnd()->WakeRenderThread();
 	}
@@ -361,26 +356,13 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		it->x = it->xSrc;
 		it->y = it->ySrc;
 		IkpBeginRePos();
-		ActivateTimeLine();
+		if (!IsValid())
+			GetWnd()->WakeRenderThread();
 	}
 	else
 	{
 		if (!(it->uFlags & KIF_KEYDOWN))
-		{
 			it->uFlags |= KIF_KEYDOWN;
-			if (!m_bAnimating)
-			{
-				D2D1_RECT_F rcF;
-				RECT rc;
-				CalcKeyItemNormalPos(it - m_vItem.begin(), rcF.left, rcF.top);
-				rcF.right = rcF.left + m_cxyBlock;
-				rcF.bottom = rcF.top + m_cxyBlock;
-				eck::CeilRect(rcF, rc);
-				eck::InflateRect(rc, VeCxKeyStrokeBorder, VeCxKeyStrokeBorder);
-				ElemToClient(rc);
-				InvalidateRect(rc);
-			}
-		}
 	}
 }
 
@@ -391,21 +373,7 @@ void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
 	if (it == m_vItem.end())
 		return;
 	if (it->uFlags & KIF_KEYDOWN)
-	{
 		it->uFlags &= ~KIF_KEYDOWN;
-		if (!m_bAnimating)
-		{
-			D2D1_RECT_F rcF;
-			RECT rc;
-			CalcKeyItemNormalPos(it - m_vItem.begin(), rcF.left, rcF.top);
-			rcF.right = rcF.left + m_cxyBlock;
-			rcF.bottom = rcF.top + m_cxyBlock;
-			eck::CeilRect(rcF, rc);
-			eck::InflateRect(rc, VeCxKeyStrokeBorder, VeCxKeyStrokeBorder);
-			ElemToClient(rc);
-			InvalidateRect(rc);
-		}
-	}
 }
 
 void CVeKeyStroke2::IkpBeginRePos()
@@ -461,8 +429,8 @@ void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
 		}
 		++i;
 	}
-	if (bAn)
-		ActivateTimeLine();
+	if (bAn && !IsValid())
+		GetWnd()->WakeRenderThread();
 }
 
 void CVeKeyStroke2::IkpBeginJump(ITEM& e)
@@ -483,33 +451,33 @@ void CVeKeyStroke2::IkpCancelJump(ITEM& e)
 
 void CVeKeyStroke2::IkpTickKey()
 {
-	ECK_DUILOCK;
-	BOOL bDel{};
-	const auto ullTick = NtGetTickCount64();
-	for (size_t i = m_vItem.size(); i; --i)
-	{
-		auto& e = m_vItem[i - 1];
-		if (e.eState != ItemState::FadeIn &&
-			!(e.uFlags & KIF_KEYDOWN))
-		{
-			e.msRemain -= TE_KEYSTROKE2;
-			if (e.msRemain <= 0)
-			{
-				bDel = TRUE;
-				m_vItem.erase(m_vItem.begin() + i - 1);
-			}
-		}
-	}
-	if (bDel)
-	{
-		if (m_vItem.empty())
-			InvalidateRect();
-		else
-		{
-			IkpBeginRePos();
-			ActivateTimeLine();
-		}
-	}
+	//ECK_DUILOCK;
+	//BOOL bDel{};
+	//const auto ullTick = NtGetTickCount64();
+	//for (size_t i = m_vItem.size(); i; --i)
+	//{
+	//	auto& e = m_vItem[i - 1];
+	//	if (e.eState != ItemState::FadeIn &&
+	//		!(e.uFlags & KIF_KEYDOWN))
+	//	{
+	//		e.msRemain -= TE_KEYSTROKE2;
+	//		if (e.msRemain <= 0)
+	//		{
+	//			bDel = TRUE;
+	//			m_vItem.erase(m_vItem.begin() + i - 1);
+	//		}
+	//	}
+	//}
+	//if (bDel)
+	//{
+	//	if (m_vItem.empty())
+	//		InvalidateRect();
+	//	else
+	//	{
+	//		IkpBeginRePos();
+	//		ActivateTimeLine();
+	//	}
+	//}
 }
 
 LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -579,7 +547,8 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		return;
 	float xFinal, yFinal;
 	CalcKeyItemNormalPos(0, xFinal, yFinal);
-	BOOL bActive{};
+	BOOL bActive{}, bDelete{};
+	D2D1_RECT_F rcUpdate{};
 	EckCounter(m_vItem.size(), i)
 	{
 		auto& e = m_vItem[i];
@@ -596,6 +565,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 				if (k1 > e.fOpacity)
 					e.fOpacity = k1;
 			}
+			const auto xOld = e.x, yOld = e.y;
 			if (k >= 1.f)
 			{
 				e.msTime = 0;
@@ -609,43 +579,71 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 				e.y = e.ySrc + (yFinal - e.ySrc) * k;
 				bActive = TRUE;
 			}
+			eck::UnionRect(rcUpdate, rcUpdate, {
+				std::min(xOld, e.x), std::min(yOld, e.y),
+				std::max(xOld, e.x) + m_cxyBlock,
+				std::max(yOld, e.y) + m_cxyBlock });
 		}
-		else if (e.eState == ItemState::Jump)
+		else
 		{
-			const float xDst = xFinal, yDst = 0.f;
-			e.msTime += iMs;
-			const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, JumpAnDuration);
-			if (k >= 1.f)
+			if ((e.msRemain -= iMs) <= 0)
 			{
-				e.eState = ItemState::Jumped;
-				e.x = xDst;
-				e.y = yDst;
+				bDelete = TRUE;
+				e.eState = ItemState::Deleted;
+				eck::UnionRect(rcUpdate, rcUpdate, {
+					e.x, e.y,
+					e.x + m_cxyBlock, e.y + m_cxyBlock });
+				goto Next;
 			}
-			else
+			if (e.eState == ItemState::Jump)
 			{
-				e.x = e.xSrc + (xDst - e.xSrc) * k;
-				e.y = e.ySrc + (yDst - e.ySrc) * k;
-				bActive = TRUE;
+				const float xDst = xFinal, yDst = 0.f;
+				e.msTime += iMs;
+				const auto k = eck::Easing::OutCubic(e.msTime, 0.f, 1.f, JumpAnDuration);
+				const auto xOld = e.x, yOld = e.y;
+				if (k >= 1.f)
+				{
+					e.eState = ItemState::Jumped;
+					e.x = xDst;
+					e.y = yDst;
+				}
+				else
+				{
+					e.x = e.xSrc + (xDst - e.xSrc) * k;
+					e.y = e.ySrc + (yDst - e.ySrc) * k;
+					bActive = TRUE;
+				}
+				eck::UnionRect(rcUpdate, rcUpdate, {
+					std::min(xOld, e.x), std::min(yOld, e.y),
+					std::max(xOld, e.x) + m_cxyBlock,
+					std::max(yOld, e.y) + m_cxyBlock });
+			}
+			else if (App->GetOpt().bRainbowColor)// 常规项目，更新彩虹色
+			{
+				eck::UnionRect(rcUpdate, rcUpdate, {
+					e.x, e.y,
+					e.x + m_cxyBlock, e.y + m_cxyBlock });
 			}
 		}
+	Next:;
 		xFinal += (m_cxyBlock + (float)VeCxyKeyStroke2Padding);
 	}
-	if (m_bAnimating)
-		InvalidateRect();
-	else if (!m_vItem.empty())// 没有动画运行，仅为彩虹色更新
+	if (bDelete && !m_vItem.empty())
 	{
-		const auto cxMax = m_cxyBlock * m_vItem.size() +
-			(float)VeCxyKeyStroke2Padding * (m_vItem.size() - 1);
-		const auto x = (GetWidthF() - cxMax) / 2.f;
-		RECT rc;
-		rc.left = (int)floorf(x) - VeCxKeyStrokeBorder;
-		rc.top = -VeCxKeyStrokeBorder;
-		rc.right = (int)ceilf(x + cxMax + (float)VeCxKeyStrokeBorder);
-		rc.bottom = GetHeight();
-		ElemToClient(rc);
-		InvalidateRect(rc);
+		for (auto i = m_vItem.size(); i; --i)
+		{
+			auto& e = m_vItem[i - 1];
+			if (e.eState == ItemState::Deleted)
+				m_vItem.erase(m_vItem.begin() + i - 1);
+		}
+		if (!m_vItem.empty())
+			IkpBeginRePos();
 	}
-	m_bAnimating = bActive;
+	RECT rc;
+	eck::CeilRect(rcUpdate, rc);
+	ElemToClient(rc);
+	eck::InflateRect(rc, 3, 3);
+	InvalidateRect(rc);
 }
 
 void CVeKeyStroke2::CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y)

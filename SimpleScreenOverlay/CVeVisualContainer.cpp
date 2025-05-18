@@ -737,13 +737,10 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_fSpotLightMaxRadius = std::max(GetWidthF(), GetHeightF()) / 2.f;
 		RECT rcKs2;
-		rcKs2.right = GetWidth() / 2;
-		rcKs2.left = (GetWidth() - rcKs2.right) / 2;
-		rcKs2.right += rcKs2.left;
-
-		rcKs2.bottom = VeCyKeyStroke2;
-		rcKs2.top = GetHeight() - rcKs2.bottom - 10;
-		rcKs2.bottom += rcKs2.top;
+		rcKs2.left = 0;
+		rcKs2.right = GetWidth();
+		rcKs2.top = GetHeight() - VeCyKeyStroke2 - 10;
+		rcKs2.bottom = rcKs2.top + VeCyKeyStroke2;
 
 		m_KeyStroke2.SetRect(rcKs2);
 	}

@@ -6,7 +6,7 @@ class CVeKeyStroke2 final : public Dui::CElem, public eck::CFixedTimeLine
 private:
 	enum
 	{
-		TE_KEYSTROKE2 = 150,
+		//TE_KEYSTROKE2 = 150,
 	};
 
 	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数
@@ -19,6 +19,7 @@ private:
 		Jump,	// 避让光标，正在播放向上移动动画
 		Jumped,	// 已避让光标
 		Restore,// 取消避让光标，正在播放恢复动画
+		Deleted,
 	};
 	enum : BYTE
 	{
@@ -49,7 +50,6 @@ private:
 	ID2D1SolidColorBrush* m_pBrushForegnd{};
 	std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序
 	float m_cxyBlock{};
-	BOOLEAN m_bAnimating{};
 
 	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
@@ -69,12 +69,6 @@ private:
 
 	void IkpTickKey();
 
-	void ActivateTimeLine()
-	{
-		m_bAnimating = TRUE;
-		GetWnd()->WakeRenderThread();
-	}
-
 	void CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y);
 
 	void PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e);
@@ -84,8 +78,5 @@ public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid()
-	{
-		return (m_bAnimating || App->GetOpt().bRainbowColor) && !m_vItem.empty();
-	}
+	BOOL STDMETHODCALLTYPE IsValid() { return !m_vItem.empty(); }
 };

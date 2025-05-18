@@ -546,8 +546,9 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		ECK_DUILOCK;
 		m_cxyBlock = GetHeightF() - float(VeCxKeyStrokeBorder * 2);
-
 		m_cxyBlock = 40;
+		IkpBeginRePos();
+		GetWnd()->WakeRenderThread();
 	}
 	break;
 

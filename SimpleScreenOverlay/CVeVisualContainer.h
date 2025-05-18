@@ -96,6 +96,7 @@ private:
 
 	void InitSpotLight();
 	void InitClick();
+	void InitCursorLocateGeoReal();
 	void InitCursorLocate();
 	void InitCursorPos();
 public:

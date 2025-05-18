@@ -297,6 +297,7 @@ void CVeVisualContainer::InitSpotLight()
 	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
 	float xDpi, yDpi;
 	m_pDC->GetDpi(&xDpi, &yDpi);
+	SafeRelease(m_pGrSpotLight);
 	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
 		D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
@@ -318,7 +319,7 @@ void CVeVisualContainer::InitClick()
 	eck::g_pD2dFactory->CreateStrokeStyle(StrokeStyle, nullptr, 0, &m_pStrokeStyleClick);
 }
 
-void CVeVisualContainer::InitCursorLocate()
+void CVeVisualContainer::InitCursorLocateGeoReal()
 {
 	ComPtr<ID2D1EllipseGeometry> pGeoCircle;
 	constexpr D2D1_ELLIPSE Circle
@@ -329,11 +330,16 @@ void CVeVisualContainer::InitCursorLocate()
 	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
 	float xDpi, yDpi;
 	m_pDC->GetDpi(&xDpi, &yDpi);
+	SafeRelease(m_pGrCursorLocate);
 	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
 		D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
 		&m_pGrCursorLocate);
+}
 
+void CVeVisualContainer::InitCursorLocate()
+{
+	InitCursorLocateGeoReal();
 	ComPtr<ID2D1GradientStopCollection> pStop;
 	constexpr D2D1_GRADIENT_STOP Stop[]
 	{
@@ -363,6 +369,7 @@ void CVeVisualContainer::InitCursorPos()
 	eck::g_pD2dFactory->CreateEllipseGeometry(Circle, &pGeoCircle);
 	float xDpi, yDpi;
 	m_pDC->GetDpi(&xDpi, &yDpi);
+	SafeRelease(m_pGrCursorPos);
 	m_pDC1->CreateFilledGeometryRealization(pGeoCircle.Get(),
 		D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
@@ -594,6 +601,14 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 
+	case WM_DPICHANGED:
+	{
+		InitSpotLight();
+		InitCursorLocateGeoReal();
+		InitCursorPos();
+	}
+	break;
+
 	case WM_CREATE:
 	{
 		m_pDC->QueryInterface(&m_pDC1);
@@ -637,6 +652,11 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		SafeRelease(m_pBrush);
 		SafeRelease(m_pGrSpotLight);
+		SafeRelease(m_pGrCursorLocate);
+		SafeRelease(m_pGrCursorPos);
+		SafeRelease(m_pStrokeStyleClick);
+		SafeRelease(m_pEllipseClick);
+		SafeRelease(m_pBrCursorLocate);
 		SafeRelease(m_pDC1);
 		m_TcWndTip.Invalidate();
 		m_TcRulerCursorTip.Invalidate();

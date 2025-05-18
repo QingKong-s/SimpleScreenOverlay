@@ -222,6 +222,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DISPLAYCHANGE:
 		RePosWindow();
 		break;
+	case WM_DPICHANGED:
+	{
+		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+		SetUserDpi(LOWORD(wParam));
+		return lResult;
+	}
+	break;
 
 	case WM_CREATE:
 	{

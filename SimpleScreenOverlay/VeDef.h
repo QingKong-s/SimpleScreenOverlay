@@ -31,6 +31,8 @@ enum
 	VeCxyMenuTipMargin = 5,
 
 	VeCxClickStroke = 4,
+
+	VeCxWheelIndicator = 15,
 };
 
 enum
@@ -53,4 +55,5 @@ enum
 {
 	IDT_BEGIN = 0x514B,
 	IDT_KEYSTROKE2,
+	IDT_WHEEL,
 };

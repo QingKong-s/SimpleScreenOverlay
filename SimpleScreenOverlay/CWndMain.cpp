@@ -24,8 +24,8 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 	UINT cbBuf{ sizeof(ri) };
 	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
 		&ri, &cbBuf, sizeof(RAWINPUTHEADER));
-	Notify eNotify[12];
-	SSONOTIFY n[12]{};
+	Notify eNotify[13];
+	SSONOTIFY n[13]{};
 	size_t cEvt{};
 	switch (ri.header.dwType)
 	{
@@ -97,6 +97,18 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 		{
 			eNotify[cEvt] = Notify::GlobalMouseUp;
 			n[cEvt].Vk = VK_XBUTTON2;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_WHEEL)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseWheel;
+			n[cEvt].dWheel = (int)(short)ri.data.mouse.usButtonData;
+			++cEvt;
+		}
+		if (ri.data.mouse.usButtonFlags & RI_MOUSE_HWHEEL)
+		{
+			eNotify[cEvt] = Notify::GlobalMouseHWheel;
+			n[cEvt].dWheel = (int)(short)ri.data.mouse.usButtonData;
 			++cEvt;
 		}
 		for (size_t i = 0; i < cEvt; ++i)
@@ -205,8 +217,19 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SETTINGCHANGE:
 	{
-		if (wParam == SPI_SETWORKAREA)
+		switch (wParam)
+		{
+		case SPI_SETWORKAREA:
 			RePosWindow();
+			break;
+		case 8233:
+		{
+			m_CursorSize = eck::GetCursorSize(GetUserDpiValue());
+			SSONOTIFY n{};
+			App->GetSignal().Emit(Notify::CursorSettingChanged, n);
+		}
+		break;
+		}
 		if (lParam && eck::TcsEqual((PCWSTR)lParam, L"TraySettings"))
 			RePosWindow();
 		eck::MsgOnSettingChangeFixDpiAwareV2(hWnd, wParam, lParam);
@@ -237,7 +260,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		BOOL bExcludeFromPeek{ TRUE };
 		DwmSetWindowAttribute(hWnd, DWMWA_EXCLUDED_FROM_PEEK,
 			&bExcludeFromPeek, sizeof(BOOL));
-		SetDrawDirtyRect(FALSE);
+		SetDrawDirtyRect(1);
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,
@@ -271,6 +294,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DcvInit(pDcVisual.get(), pDcDevice);
 #endif// SSO_WINRT
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+		m_CursorSize = eck::GetCursorSize(GetUserDpiValue());
+
 		m_pCompMenuSwitch = new Dui::CCompositorPageAn{};
 		m_pCompMenuSwitch->InitAsTranslationOpacity();
 		const auto cx = GetClientWidthLog();

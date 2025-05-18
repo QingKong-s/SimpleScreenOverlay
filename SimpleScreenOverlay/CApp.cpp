@@ -55,6 +55,8 @@ void CApp::OptLoad()
 		L"ShowCursorPos"sv).GetBool(FALSE);
 	m_Opt.fCursorPosRadius = (float)Ini.GetKeyValue(Sec,
 		L"CursorPosRadius"sv).GetDouble(30.f);
+	m_Opt.bShowWheel = Ini.GetKeyValue(Sec,
+		L"ShowWheel"sv).GetBool(TRUE);
 }
 
 void CApp::OptSave()
@@ -109,6 +111,9 @@ void CApp::OptSave()
 	Ini.SetKeyValue(Sec, L"ShowCursorPos"sv, rsTmp.ToStringView());
 	rsTmp.Format(L"%f", m_Opt.fCursorPosRadius);
 	Ini.SetKeyValue(Sec, L"CursorPosRadius"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%d", m_Opt.bShowWheel);
+	Ini.SetKeyValue(Sec, L"ShowWheel"sv, rsTmp.ToStringView());
+
 	rsTmp.Clear();
 	Ini.Save(rsTmp);
 	eck::WriteToFile((eck::GetRunningPath() + L"\\Options.ini").Data(),

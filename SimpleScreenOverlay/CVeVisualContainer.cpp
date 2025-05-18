@@ -226,6 +226,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 				});
 			bUpdate = TRUE;
 		}
+		//===光标位置
 		if (App->GetOpt().bShowCursorPos)
 		{
 			const auto r = App->GetOpt().fCursorPosRadius;
@@ -240,6 +241,21 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			bUpdate = TRUE;
 		}
 		m_ptCursor = ptNew;
+		//===滚轮显示
+		if (m_eWheel != Wheel::None && App->GetOpt().bShowWheel)
+		{
+			const auto r = (float)VeCxWheelIndicator;
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					m_ptWheelIndicator.x,m_ptWheelIndicator.y,
+					m_ptWheelIndicator.x + r,m_ptWheelIndicator.y + r
+				});
+			UpdateWheelIndicatorPos();
+			eck::UnionRect(rcUpdate, rcUpdate, {
+					m_ptWheelIndicator.x,m_ptWheelIndicator.y,
+					m_ptWheelIndicator.x + r,m_ptWheelIndicator.y + r
+				});
+			bUpdate = TRUE;
+		}
 		if (bUpdate)
 		{
 			RECT rc;
@@ -247,6 +263,32 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			ElemToClient(rc);
 			eck::InflateRect(rc, 3, 3);
 			InvalidateRect(rcUpdate);
+		}
+	}
+	break;
+	case Notify::GlobalMouseWheel:
+	case Notify::GlobalMouseHWheel:
+	{
+		if (!App->GetOpt().bShowWheel)
+			break;
+		ECK_DUILOCK;
+		UpdateCursorPos();
+		Wheel eWheel;
+		if (eNotify == Notify::GlobalMouseWheel)
+			eWheel = (n.dWheel > 0 ? Wheel::Up : Wheel::Down);
+		else
+			eWheel = (n.dWheel > 0 ? Wheel::Left : Wheel::Right);
+		if (!m_bWheelTimer)
+		{
+			SetTimer(IDT_WHEEL, TE_WHEEL);
+			m_bWheelTimer = TRUE;
+		}
+		m_cWheelShowCount = 3;
+		if (m_eWheel != eWheel)
+		{
+			m_eWheel = eWheel;
+			UpdateWheelIndicatorPos();
+			InvalidateWheelIndicator();
 		}
 	}
 	break;
@@ -261,6 +303,16 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			InvalidateRect();
 		m_bTimeLineActive = b;
 		m_bWatermarkEnabled = !!Opt.bWatermark;
+	}
+	break;
+	case Notify::CursorSettingChanged:
+	{
+		ECK_DUILOCK;
+		if (m_eWheel != Wheel::None)
+		{
+			UpdateWheelIndicatorPos();
+			InvalidateWheelIndicator();
+		}
 	}
 	break;
 	}
@@ -284,6 +336,40 @@ void CVeVisualContainer::UpdateCursorPos()
 	GetWnd()->Phy2Log(pt);
 	ClientToElem(pt);
 	m_ptCursor = { (float)pt.x, (float)pt.y };
+}
+
+void CVeVisualContainer::UpdateWheelIndicatorPos()
+{
+	const auto cxCursor = eck::DpiScaleF(
+		(float)((CWndMain*)GetWnd())->GetCursorSize().cx,
+		96,
+		GetWnd()->GetUserDpiValue());
+	const auto cyCursor = eck::DpiScaleF(
+		(float)((CWndMain*)GetWnd())->GetCursorSize().cy,
+		96,
+		GetWnd()->GetUserDpiValue());
+	if (m_ptCursor.y - cyCursor / 2.f < 0.f)
+		m_ptWheelIndicator.y = m_ptCursor.y + cyCursor;
+	else
+		m_ptWheelIndicator.y = m_ptCursor.y - cyCursor / 2.f;
+	if (m_ptCursor.x + cxCursor / 2.f > GetWnd()->GetClientWidthLog())
+		m_ptWheelIndicator.x = m_ptCursor.x - cxCursor;
+	else
+		m_ptWheelIndicator.x = m_ptCursor.x + cxCursor / 2.f;
+}
+
+void CVeVisualContainer::InvalidateWheelIndicator()
+{
+	RECT rc
+	{
+		(int)m_ptWheelIndicator.x,
+		(int)m_ptWheelIndicator.y,
+		(int)m_ptWheelIndicator.x + VeCxWheelIndicator,
+		(int)m_ptWheelIndicator.y + VeCxWheelIndicator
+	};
+	ElemToClient(rc);
+	eck::InflateRect(rc, 3, 3);
+	InvalidateRect(rc);
 }
 
 void CVeVisualContainer::InitSpotLight()
@@ -374,6 +460,24 @@ void CVeVisualContainer::InitCursorPos()
 		D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
 		&m_pGrCursorPos);
+}
+
+void CVeVisualContainer::InitWheel()
+{
+	ComPtr<ID2D1PathGeometry1> pPath;
+	eck::g_pD2dFactory->CreatePathGeometry(&pPath);
+	ComPtr<ID2D1GeometrySink> pSink;
+	pPath->Open(&pSink);
+	constexpr auto y = WheelGeoSide * 1.73205f / 2.f;
+	pSink->BeginFigure({ WheelGeoSide / 2.f,0.f }, D2D1_FIGURE_BEGIN_FILLED);
+	pSink->AddLine({ 0.f,y });
+	pSink->AddLine({ WheelGeoSide,y });
+	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+	pSink->Close();
+	m_pDC1->CreateFilledGeometryRealization(pPath.Get(),
+		D2D1::ComputeFlatteningTolerance(
+			D2D1::Matrix3x2F::Identity(), 96.f, 96.f, 1.f),
+		&m_pGrWheel);
 }
 
 LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -581,7 +685,51 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC1->DrawGeometryRealization(m_pGrCursorLocate, m_pBrCursorLocate);
 			m_pDC->SetTransform(MatOld);
 		}
+		//===滚轮显示
+		if (m_eWheel != Wheel::None && App->GetOpt().bShowWheel)
+		{
+			m_pBrush->SetColor(D2D1_COLOR_F{ .r = 1.f,.a = 1.f });
+			D2D1::Matrix3x2F MatOld;
+			m_pDC->GetTransform(&MatOld);
+			const auto fAngle = (m_eWheel == Wheel::Up ? 0.f :
+				m_eWheel == Wheel::Down ? 180.f :
+				m_eWheel == Wheel::Left ? 90.f : -90.f);
+			constexpr auto fScale = (float)VeCxWheelIndicator / WheelGeoSide;
+			m_pDC->SetTransform(
+				D2D1::Matrix3x2F::Rotation(
+					fAngle, WheelGeoCenter) *
+				D2D1::Matrix3x2F::Scale(
+					fScale, fScale) *
+				D2D1::Matrix3x2F::Translation(
+					m_ptWheelIndicator.x,
+					m_ptWheelIndicator.y) *
+				MatOld);
+			m_pDC1->DrawGeometryRealization(m_pGrWheel, m_pBrush);
+			m_pDC->SetTransform(MatOld);
+		}
 		EndPaint(ps);
+	}
+	return 0;
+
+	case WM_TIMER:
+	{
+		if (wParam == IDT_WHEEL)
+		{
+			ECK_DUILOCK;
+			if (!m_cWheelShowCount || m_eWheel == Wheel::None)
+			{
+				KillTimer(IDT_WHEEL);
+				m_bWheelTimer = FALSE;
+				return 0;
+			}
+			if (!--m_cWheelShowCount)
+			{
+				KillTimer(IDT_WHEEL);
+				m_bWheelTimer = FALSE;
+				m_eWheel = Wheel::None;
+				InvalidateWheelIndicator();
+			}
+		}
 	}
 	return 0;
 
@@ -618,6 +766,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		InitClick();
 		InitCursorLocate();
 		InitCursorPos();
+		InitWheel();
 
 		m_hSlot = App->GetSignal().Connect(this, &CVeVisualContainer::OnAppEvent);
 		const auto pTfKeyStroke = App->CreateTextFormat(16);

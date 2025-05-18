@@ -30,6 +30,7 @@ enum class MRender
 	Click,
 	LocateCursor,
 	CursorPos,
+	WheelIndicator,
 };
 enum class MTools
 {
@@ -70,6 +71,7 @@ constexpr static ITEM_DESC ItemRender[]
 	{ L"点击提示"sv, L"显示光标点击状态"sv },
 	{ L"定位光标"sv, L"按下Ctrl时显示光标位置"sv },
 	{ L"光标位置"sv, L"在光标处绘制一个圆"sv },
+	{ L"滚轮指示器"sv, L"在光标旁边绘制当前滚轮的状态"sv },
 };
 constexpr static ITEM_DESC ItemTools[]
 {
@@ -224,6 +226,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case MRender::Click:		Opt.bShowClick = bSel;		break;
 				case MRender::LocateCursor:	Opt.bLocateCursorWithCtrl = bSel;	break;
 				case MRender::CursorPos:	Opt.bShowCursorPos = bSel;	break;
+				case MRender::WheelIndicator: Opt.bShowWheel = bSel;	break;
 				}
 				SSONOTIFY n{};
 				App->GetSignal().Emit(Notify::OptionsChanged, n);
@@ -339,6 +342,8 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MenuRender.SetItemState((int)MRender::LocateCursor, Dui::LEIF_SELECTED);
 		if (Opt.bShowCursorPos)
 			MenuRender.SetItemState((int)MRender::CursorPos, Dui::LEIF_SELECTED);
+		if (Opt.bShowWheel)
+			MenuRender.SetItemState((int)MRender::WheelIndicator, Dui::LEIF_SELECTED);
 		GetWnd()->RegisterTimeLine(this);
 	}
 	break;

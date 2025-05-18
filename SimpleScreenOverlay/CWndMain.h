@@ -24,6 +24,8 @@ private:
 
 	UINT m_uMsgTaskbarCreated{};
 
+	SIZE m_CursorSize{};
+
 	CApp::HSlot m_hSlot{};
 
 #if SSO_WINRT
@@ -58,4 +60,6 @@ public:
 	BOOL STDMETHODCALLTYPE IsValid() { return m_bMenuAn; }
 
 	void SwitchMenuShowing(BOOL bShow);
+
+	EckInlineNdCe auto GetCursorSize() const { return m_CursorSize; }
 };

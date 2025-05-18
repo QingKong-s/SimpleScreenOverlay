@@ -9,7 +9,10 @@ enum class Notify
 	DoubleCtrl,			// 
 	SingleCtrl,			//
 	GlobalMouseMove,	// pt
+	GlobalMouseWheel,	// dWheel
+	GlobalMouseHWheel,	// dWheel
 	OptionsChanged,		//
+	CursorSettingChanged,//
 };
 
 struct SSONOTIFY
@@ -22,6 +25,7 @@ struct SSONOTIFY
 			BOOL bRepeat;
 		};
 		POINT pt;
+		int dWheel;
 	};
 };
 
@@ -112,6 +116,7 @@ private:
 		BOOLEAN bShowClick;
 		BOOLEAN bShowCursorPos;
 		BOOLEAN bLocateCursorWithCtrl;
+		BOOLEAN bShowWheel;
 
 		float cxCrosshairLine;
 		float dCrosshairCursorGap;

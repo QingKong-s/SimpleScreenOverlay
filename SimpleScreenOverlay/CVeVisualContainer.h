@@ -98,6 +98,7 @@ private:
 		Right,
 	};
 	ID2D1GeometryRealization* m_pGrWheel{};
+	ID2D1GeometryRealization* m_pGrWheelBorder{};
 	D2D1_POINT_2F m_ptWheelIndicator{};
 	Wheel m_eWheel{ Wheel::None };
 	BOOLEAN m_bWheelTimer{};

@@ -52,6 +52,9 @@ public:
 
 		CrSpotLightBkg,
 
+		CrWheelIndicator,
+		CrWheelIndicatorBorder,
+
 		CrMax
 	};
 
@@ -74,6 +77,9 @@ public:
 		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
 
 		{ 0.f,0.f,0.f,0.5f },
+
+		{ 1.f,1.f,1.f,0.6f },
+		{ 0.f,0.f,0.f,0.6f },
 	};
 
 	constexpr static D2D1_COLOR_F ColorDark[CrMax]
@@ -95,6 +101,9 @@ public:
 		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
 
 		{ 0.f,0.f,0.f,0.5f },
+
+		{ 0.f,0.f,0.f,0.6f },
+		{ 1.f,1.f,1.f,0.6f },
 	};
 private:
 	struct OPT

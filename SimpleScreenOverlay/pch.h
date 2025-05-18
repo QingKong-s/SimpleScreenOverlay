@@ -4,7 +4,7 @@
 
 #define _CRTDBG_MAP_ALLOC 1
 
-#define SSO_WINRT 0
+#define SSO_WINRT 1
 
 #include "eck\PchInc.h"
 #include "eck\CCommDlg.h"

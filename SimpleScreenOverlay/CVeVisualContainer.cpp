@@ -474,10 +474,18 @@ void CVeVisualContainer::InitWheel()
 	pSink->AddLine({ WheelGeoSide,y });
 	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
 	pSink->Close();
+	SafeRelease(m_pGrWheel);
 	m_pDC1->CreateFilledGeometryRealization(pPath.Get(),
 		D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), 96.f, 96.f, 1.f),
 		&m_pGrWheel);
+	SafeRelease(m_pGrWheelBorder);
+	float xDpi, yDpi;
+	m_pDC->GetDpi(&xDpi, &yDpi);
+	m_pDC1->CreateStrokedGeometryRealization(pPath.Get(),
+		D2D1::ComputeFlatteningTolerance(
+			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f),
+		WheelGeoSide / (float)VeCxWheelIndicator, nullptr, &m_pGrWheelBorder);
 }
 
 LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -688,7 +696,6 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//===滚轮显示
 		if (m_eWheel != Wheel::None && App->GetOpt().bShowWheel)
 		{
-			m_pBrush->SetColor(D2D1_COLOR_F{ .r = 1.f,.a = 1.f });
 			D2D1::Matrix3x2F MatOld;
 			m_pDC->GetTransform(&MatOld);
 			const auto fAngle = (m_eWheel == Wheel::Up ? 0.f :
@@ -704,7 +711,10 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					m_ptWheelIndicator.x,
 					m_ptWheelIndicator.y) *
 				MatOld);
+			m_pBrush->SetColor(App->GetColor(CApp::CrWheelIndicator));
 			m_pDC1->DrawGeometryRealization(m_pGrWheel, m_pBrush);
+			m_pBrush->SetColor(App->GetColor(CApp::CrWheelIndicatorBorder));
+			m_pDC1->DrawGeometryRealization(m_pGrWheelBorder, m_pBrush);
 			m_pDC->SetTransform(MatOld);
 		}
 		EndPaint(ps);
@@ -751,6 +761,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		InitSpotLight();
 		InitCursorLocateGeoReal();
 		InitCursorPos();
+		InitWheel();
 	}
 	break;
 
@@ -803,6 +814,8 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SafeRelease(m_pStrokeStyleClick);
 		SafeRelease(m_pEllipseClick);
 		SafeRelease(m_pBrCursorLocate);
+		SafeRelease(m_pGrWheel);
+		SafeRelease(m_pGrWheelBorder);
 		SafeRelease(m_pDC1);
 		m_TcWndTip.Invalidate();
 		m_TcRulerCursorTip.Invalidate();

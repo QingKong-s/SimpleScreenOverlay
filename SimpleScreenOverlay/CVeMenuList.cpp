@@ -40,6 +40,10 @@ SkipFill:
 
 	if (e.pLayout.Get())
 	{
+		if (App->GetOpt().bRainbowColor &&
+			GetItemState(idx) & Dui::LEIF_SELECTED)
+			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), idx * 2 + 200));
+		else
 		m_pBrush->SetColor(App->GetColor(CApp::CrText));
 		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pLayout.Get(),
 			m_pBrush, Dui::DrawTextLayoutFlags);

@@ -592,32 +592,32 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_pBrush->SetColor(crOld);
 				m_pDC->SetTransform(Mat);
 			}
-		}
-		//===标尺
-		if (App->GetOpt().bRuler)
-		{
-			if (m_TcRulerCursorTip.IsValid())
+			//===标尺
+			if (App->GetOpt().bRuler)
 			{
-				D2D1::Matrix3x2F Mat;
-				m_pDC->GetTransform(&Mat);
-				const auto MatNew = Mat * D2D1::Matrix3x2F::Translation(
-					m_ptCursor.x + (float)VeCxRulerTipMargin,
-					m_ptCursor.y + (float)VeCyRulerTipMargin);
-				m_pDC->SetTransform(MatNew);
-				m_pDC1->DrawGeometryRealization(m_TcRulerCursorTip.GetGeometryRealization(),
-					m_pBrush);
-				m_pDC->SetTransform(Mat);
-				D2D1_POINT_2F pt1, pt2;
-				pt1.x = m_ptCursor.x;
-				pt1.y = std::max(ps.rcfClipInElem.top, m_rcWndHili.top);
-				pt2.x = m_ptCursor.x;
-				pt2.y = std::min(ps.rcfClipInElem.bottom, m_rcWndHili.bottom);
-				m_pDC->DrawLine(pt1, pt2, m_pBrush);
-				pt2.x = std::max(ps.rcfClipInElem.left, m_rcWndHili.left);
-				pt1.y = m_ptCursor.y;
-				pt1.x = std::min(ps.rcfClipInElem.right, m_rcWndHili.right);
-				pt2.y = m_ptCursor.y;
-				m_pDC->DrawLine(pt1, pt2, m_pBrush);
+				if (m_TcRulerCursorTip.IsValid())
+				{
+					D2D1::Matrix3x2F Mat;
+					m_pDC->GetTransform(&Mat);
+					const auto MatNew = Mat * D2D1::Matrix3x2F::Translation(
+						m_ptCursor.x + (float)VeCxRulerTipMargin,
+						m_ptCursor.y + (float)VeCyRulerTipMargin);
+					m_pDC->SetTransform(MatNew);
+					m_pDC1->DrawGeometryRealization(m_TcRulerCursorTip.GetGeometryRealization(),
+						m_pBrush);
+					m_pDC->SetTransform(Mat);
+					D2D1_POINT_2F pt1, pt2;
+					pt1.x = m_ptCursor.x;
+					pt1.y = std::max(ps.rcfClipInElem.top, m_rcWndHili.top);
+					pt2.x = m_ptCursor.x;
+					pt2.y = std::min(ps.rcfClipInElem.bottom, m_rcWndHili.bottom);
+					m_pDC->DrawLine(pt1, pt2, m_pBrush);
+					pt2.x = std::max(ps.rcfClipInElem.left, m_rcWndHili.left);
+					pt1.y = m_ptCursor.y;
+					pt1.x = std::min(ps.rcfClipInElem.right, m_rcWndHili.right);
+					pt2.y = m_ptCursor.y;
+					m_pDC->DrawLine(pt1, pt2, m_pBrush);
+				}
 			}
 		}
 		//===水印

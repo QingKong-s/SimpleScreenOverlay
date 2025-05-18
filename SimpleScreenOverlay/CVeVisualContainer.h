@@ -17,6 +17,7 @@ private:
 	CVeKeyStroke2 m_KeyStroke2{};
 	// 公用光标位置
 	D2D1_POINT_2F m_ptCursor{};
+	BOOLEAN m_bCursorPosDirty{ TRUE };
 	// 聚光灯
 
 	float m_fSpotLightMaxRadius{};
@@ -52,7 +53,7 @@ private:
 	BOOLEAN m_bWatermarkEnabled{ 2 };
 	// 点击
 
-	enum class ClickState
+	enum class ClickState : BYTE
 	{
 		None,
 		L,
@@ -61,8 +62,10 @@ private:
 	};
 	struct CLICK
 	{
+		ULONGLONG tAdd;
 		D2D1_POINT_2F ptCenter;
 		ClickState eState;
+		BOOLEAN bUp;
 		float ms;
 		float fRadius;
 		float fAlpha;

@@ -230,7 +230,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		BOOL bExcludeFromPeek{ TRUE };
 		DwmSetWindowAttribute(hWnd, DWMWA_EXCLUDED_FROM_PEEK,
 			&bExcludeFromPeek, sizeof(BOOL));
-		SetDrawDirtyRect(TRUE);
+		SetDrawDirtyRect(FALSE);
 #if SSO_WINRT
 		// 初始化互操作混合器
 		eck::DciCreateInteropCompositorFactory(eck::g_pD2dDevice,

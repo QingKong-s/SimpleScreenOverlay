@@ -59,18 +59,61 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			default: goto NoClick;
 			}
 			ECK_DUILOCK;
-			bWake = m_vClick.empty();
-			m_vClick.emplace_back(m_ptCursor, eState);
 			UpdateCursorPos();// 先更新一次，防止脏坐标
+			bWake = m_vClick.empty();
+			m_vClick.emplace_back(NtGetTickCount64(), m_ptCursor, eState);
 		}
 	NoClick:;
 		if (bWake)
 			GetWnd()->WakeRenderThread();
 	}
 	break;
+	case Notify::GlobalMouseUp:
+	{
+		// 点击显示
+		if (App->GetOpt().bShowClick)
+		{
+			ClickState eState;
+			switch (n.Vk)
+			{
+			case VK_LBUTTON: eState = ClickState::L; break;
+			case VK_RBUTTON: eState = ClickState::R; break;
+			case VK_MBUTTON: eState = ClickState::M; break;
+			default: goto NoClick1;
+			}
+			ECK_DUILOCK;
+			UpdateCursorPos();// 先更新一次，防止脏坐标
+			const auto bWake = m_vClick.empty();
+			constexpr ULONGLONG MinInterval = 300;
+			const auto tCurr = NtGetTickCount64();
+			const auto dx = eck::DaGetSystemMetrics(SM_CXDRAG,
+				GetWnd()->GetUserDpiValue());
+			const auto dy = eck::DaGetSystemMetrics(SM_CYDRAG,
+				GetWnd()->GetUserDpiValue());
+
+			for (const auto& e : m_vClick)
+				if (e.eState == eState && !e.bUp)
+				{
+					// 仅当满足以下条件之一时才列队当前放开事件
+					// 1. 按下与放开事件发生间隔大于MinInterval
+					// 2. 按下与放开事件发生在不同位置
+					const auto bTooFrequent = (tCurr - e.tAdd < MinInterval);
+					const auto bTooNear = (fabs(e.ptCenter.x - m_ptCursor.x) <= dx) ||
+						(fabs(e.ptCenter.y - m_ptCursor.y) <= dy);
+					if (bTooFrequent && bTooNear)
+						goto NoClick1;
+				}
+			m_vClick.emplace_back(NtGetTickCount64(), m_ptCursor, eState, TRUE);
+			if (bWake)
+				GetWnd()->WakeRenderThread();
+		}
+	NoClick1:;
+	}
+	break;
 	case Notify::GlobalMouseMove:
 	{
 		ECK_DUILOCK;
+		m_bCursorPosDirty = FALSE;
 		auto pt{ n.pt };
 		ScreenToClient(GetWnd()->HWnd, &pt);
 		GetWnd()->Phy2Log(pt);
@@ -82,13 +125,14 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		//===聚光灯
 		if (m_bShowSpotLight && App->GetOpt().bSpotLight)
 		{
+			const auto r = m_fSpotLightMaxRadius * m_kSpotLight;
 			eck::UnionRect(rcUpdate, rcUpdate, {
-					m_ptCursor.x - m_fCursorLocateRadius,m_ptCursor.y - m_fCursorLocateRadius,
-					m_ptCursor.x + m_fCursorLocateRadius,m_ptCursor.y + m_fCursorLocateRadius
+					m_ptCursor.x - r,m_ptCursor.y - r,
+					m_ptCursor.x + r,m_ptCursor.y + r
 				});
 			eck::UnionRect(rcUpdate, rcUpdate, {
-					ptNew.x - m_fCursorLocateRadius,ptNew.y - m_fCursorLocateRadius,
-					ptNew.x + m_fCursorLocateRadius,ptNew.y + m_fCursorLocateRadius
+					ptNew.x - r,ptNew.y - r,
+					ptNew.x + r,ptNew.y + r
 				});
 			bUpdate = TRUE;
 		}
@@ -231,6 +275,9 @@ void CVeVisualContainer::CalcWindowTipPos(const D2D1_RECT_F& rcWnd,
 
 void CVeVisualContainer::UpdateCursorPos()
 {
+	if (!m_bCursorPosDirty)
+		return;
+	m_bCursorPosDirty = FALSE;
 	POINT pt;
 	GetCursorPos(&pt);
 	ScreenToClient(GetWnd()->HWnd, &pt);
@@ -334,7 +381,9 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (App->GetOpt().bSpotLight &&
 			(m_bShowSpotLight || m_bSpotLightAnimating))
 		{
-			m_pBrush->SetColor({ 0.f,0.f,0.f,0.5f * m_kSpotLight });
+			auto cr{ App->GetColor(CApp::CrSpotLightBkg) };
+			cr.a *= m_kSpotLight;
+			m_pBrush->SetColor(cr);
 			m_pDC->FillRectangle(ps.rcfClipInElem, m_pBrush);
 
 			const auto eOldBlend = m_pDC->GetPrimitiveBlend();
@@ -655,17 +704,22 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 		}
 	}
 	if (!m_vClick.empty())
-		for (size_t i{ m_vClick.size() - 1 }; i; --i)
+		for (size_t i{ m_vClick.size() }; i; --i)
 		{
-			auto& e = m_vClick[i];
+			auto& e = m_vClick[i - 1];
 			e.ms += (float)iMs;
 			const auto k = eck::Easing::OutCubic(e.ms, 0.f, 1.f, 500.f);
 			if (k >= 1.f)
 			{
-				m_vClick.erase(m_vClick.begin() + i);
+				const auto r = e.fRadius + (float)VeCxClickStroke;
+				eck::UnionRect(rcInvalid, rcInvalid, {
+					e.ptCenter.x - r, e.ptCenter.y - r,
+					e.ptCenter.x + r, e.ptCenter.y + r });
+				m_vClick.erase(m_vClick.begin() + i - 1);
 				continue;
 			}
-			e.fRadius = (App->GetOpt().fClickRadius * k);
+			e.fRadius = ((e.bUp ? App->GetOpt().fClickRadiusUp :
+				App->GetOpt().fClickRadius) * k);
 			e.fAlpha = 1.f - k;
 			const auto r = e.fRadius + (float)VeCxClickStroke;
 			eck::UnionRect(rcInvalid, rcInvalid, {

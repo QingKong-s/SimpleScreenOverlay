@@ -45,6 +45,8 @@ void CApp::OptLoad()
 	m_Opt.bShowClick = Ini.GetKeyValue(Sec, L"ShowClick"sv).GetBool(TRUE);
 	m_Opt.fClickRadius = (float)Ini.GetKeyValue(Sec,
 		L"ClickRadius"sv).GetDouble(50.f);
+	m_Opt.fClickRadiusUp = (float)Ini.GetKeyValue(Sec,
+		L"ClickRadiusUp"sv).GetDouble(30.f);
 	m_Opt.bLocateCursorWithCtrl = Ini.GetKeyValue(Sec,
 		L"LocateCursorWithCtrl"sv).GetBool(TRUE);
 	m_Opt.fLocateCursorRadius = (float)Ini.GetKeyValue(Sec,
@@ -97,6 +99,8 @@ void CApp::OptSave()
 	Ini.SetKeyValue(Sec, L"ShowClick"sv, rsTmp.ToStringView());
 	rsTmp.Format(L"%f", m_Opt.fClickRadius);
 	Ini.SetKeyValue(Sec, L"ClickRadius"sv, rsTmp.ToStringView());
+	rsTmp.Format(L"%f", m_Opt.fClickRadiusUp);
+	Ini.SetKeyValue(Sec, L"ClickRadiusUp"sv, rsTmp.ToStringView());
 	rsTmp.Format(L"%d", m_Opt.bLocateCursorWithCtrl);
 	Ini.SetKeyValue(Sec, L"LocateCursorWithCtrl"sv, rsTmp.ToStringView());
 	rsTmp.Format(L"%f", m_Opt.fLocateCursorRadius);

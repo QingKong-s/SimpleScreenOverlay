@@ -46,6 +46,8 @@ public:
 		CrMenuTip,
 		CrMenuTipBkg,
 
+		CrSpotLightBkg,
+
 		CrMax
 	};
 
@@ -66,6 +68,8 @@ public:
 
 		{ 1.f,1.f,1.f,0.6f },
 		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
+
+		{ 0.f,0.f,0.f,0.5f },
 	};
 
 	constexpr static D2D1_COLOR_F ColorDark[CrMax]
@@ -85,6 +89,8 @@ public:
 
 		{ 1.f,1.f,1.f,0.6f },
 		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
+
+		{ 0.f,0.f,0.f,0.5f },
 	};
 private:
 	struct OPT
@@ -111,6 +117,7 @@ private:
 		float dCrosshairCursorGap;
 		float fSpotLightRadius;
 		float fClickRadius;
+		float fClickRadiusUp;
 		float fCursorPosRadius;
 		float fLocateCursorRadius;
 

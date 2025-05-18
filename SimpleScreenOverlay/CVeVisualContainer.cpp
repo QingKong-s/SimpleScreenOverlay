@@ -210,8 +210,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 				CalcWindowTipPos(m_rcWndHiliDst, m_ptWndTipDst);
 				m_msWndTipAni = 0.f;
 				m_bWndTipAnimating = TRUE;
-				if (!IsValid())
-					GetWnd()->WakeRenderThread();
+				GetWnd()->WakeRenderThread();
 			}
 			else
 			{

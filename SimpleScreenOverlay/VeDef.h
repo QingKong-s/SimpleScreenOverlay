@@ -54,6 +54,5 @@ enum
 enum
 {
 	IDT_BEGIN = 0x514B,
-	IDT_KEYSTROKE2,
 	IDT_WHEEL,
 };

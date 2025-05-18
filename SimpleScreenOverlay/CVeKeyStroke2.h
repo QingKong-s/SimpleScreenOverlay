@@ -4,11 +4,6 @@
 class CVeKeyStroke2 final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
-	enum
-	{
-		//TE_KEYSTROKE2 = 150,
-	};
-
 	constexpr static int StayMillSecPreHit = 1000;// 每次击键后，指定键显示的毫秒数
 	constexpr static int StayMillSecInit = 1600;// 第一次显示的毫秒数
 	enum class ItemState : BYTE
@@ -66,8 +61,6 @@ private:
 	void IkpBeginJump(ITEM& e);
 
 	void IkpCancelJump(ITEM& e);
-
-	void IkpTickKey();
 
 	void CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y);
 

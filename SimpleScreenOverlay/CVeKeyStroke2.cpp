@@ -356,14 +356,13 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		it->x = it->xSrc;
 		it->y = it->ySrc;
 		IkpBeginRePos();
-		if (!IsValid())
-			GetWnd()->WakeRenderThread();
 	}
 	else
 	{
 		if (!(it->uFlags & KIF_KEYDOWN))
 			it->uFlags |= KIF_KEYDOWN;
 	}
+	GetWnd()->WakeRenderThread();
 }
 
 void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
@@ -429,7 +428,7 @@ void CVeKeyStroke2::IkOnMouseMove(POINT pt_)
 		}
 		++i;
 	}
-	if (bAn && !IsValid())
+	if (bAn)
 		GetWnd()->WakeRenderThread();
 }
 
@@ -447,37 +446,6 @@ void CVeKeyStroke2::IkpCancelJump(ITEM& e)
 	e.xSrc = e.x;
 	e.ySrc = e.y;
 	e.msTime = 0;
-}
-
-void CVeKeyStroke2::IkpTickKey()
-{
-	//ECK_DUILOCK;
-	//BOOL bDel{};
-	//const auto ullTick = NtGetTickCount64();
-	//for (size_t i = m_vItem.size(); i; --i)
-	//{
-	//	auto& e = m_vItem[i - 1];
-	//	if (e.eState != ItemState::FadeIn &&
-	//		!(e.uFlags & KIF_KEYDOWN))
-	//	{
-	//		e.msRemain -= TE_KEYSTROKE2;
-	//		if (e.msRemain <= 0)
-	//		{
-	//			bDel = TRUE;
-	//			m_vItem.erase(m_vItem.begin() + i - 1);
-	//		}
-	//	}
-	//}
-	//if (bDel)
-	//{
-	//	if (m_vItem.empty())
-	//		InvalidateRect();
-	//	else
-	//	{
-	//		IkpBeginRePos();
-	//		ActivateTimeLine();
-	//	}
-	//}
 }
 
 LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -502,13 +470,6 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		EndPaint(ps);
 	}
 	break;
-
-	case WM_TIMER:
-	{
-		if (wParam == IDT_KEYSTROKE2)
-			IkpTickKey();
-	}
-	return 0;
 
 	case WM_SIZE:
 	{

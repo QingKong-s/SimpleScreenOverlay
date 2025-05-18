@@ -12,7 +12,7 @@ void CVeMenuList::LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint)
 	eck::IntersectRect(rcFill, rcItem, rcPaint);
 	if (GetItemState(idx) & Dui::LEIF_SELECTED)
 		if (App->GetOpt().bRainbowColor)
-			m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
+			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), idx * 2));
 		else
 			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuSelected));
 	else

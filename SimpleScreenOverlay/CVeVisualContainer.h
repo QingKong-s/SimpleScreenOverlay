@@ -130,6 +130,7 @@ public:
 	BOOL STDMETHODCALLTYPE IsValid()
 	{
 		return m_bTimeLineActive || m_bSpotLightAnimating ||
-			!m_vClick.empty() || m_bLocatingCursor;
+			!m_vClick.empty() || m_bLocatingCursor ||
+			(App->GetOpt().bRainbowColor && App->GetOpt().bWndHilight);
 	}
 };

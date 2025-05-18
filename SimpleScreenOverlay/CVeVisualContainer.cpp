@@ -190,6 +190,13 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			eck::ScreenToClient(GetWnd()->HWnd, &rcWnd);
 			D2D1_RECT_F rcWndHili{ eck::MakeD2DRcF(rcWnd) };
 			GetWnd()->Phy2Log(rcWndHili);
+			if (!App->GetOpt().bRainbowColor && App->GetOpt().bRuler)
+			{
+				RECT rc;
+				eck::CeilRect(rcWndHili, rc);
+				ExtendDirtyRect(rc);
+				InvalidateRect(rc);
+			}
 			ClientToElem(rcWndHili);
 			if (m_hWndCursorAt)
 			{
@@ -203,7 +210,8 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 				CalcWindowTipPos(m_rcWndHiliDst, m_ptWndTipDst);
 				m_msWndTipAni = 0.f;
 				m_bWndTipAnimating = TRUE;
-				GetWnd()->WakeRenderThread();
+				if (!IsValid())
+					GetWnd()->WakeRenderThread();
 			}
 			else
 			{
@@ -261,7 +269,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			RECT rc;
 			eck::CeilRect(rcUpdate, rc);
 			ElemToClient(rc);
-			eck::InflateRect(rc, 3, 3);
+			ExtendDirtyRect(rc);
 			InvalidateRect(rcUpdate);
 		}
 	}
@@ -368,7 +376,7 @@ void CVeVisualContainer::InvalidateWheelIndicator()
 		(int)m_ptWheelIndicator.y + VeCxWheelIndicator
 	};
 	ElemToClient(rc);
-	eck::InflateRect(rc, 3, 3);
+	ExtendDirtyRect(rc);
 	InvalidateRect(rc);
 }
 
@@ -832,7 +840,6 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 {
 	DWRITE_TEXT_METRICS tm;
 	D2D1_RECT_F rcInvalid{};
-	const auto bPartialDirty = !m_bSpotLightAnimating;
 	if (m_bSpotLightAnimating)
 	{
 		if (m_bSpotLightReverse)
@@ -846,6 +853,7 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 			m_msSpotLightAni = m_bSpotLightReverse ? 0.f : 500.f;
 			m_bSpotLightAnimating = FALSE;
 		}
+		eck::UnionRect(rcInvalid, rcInvalid, GetViewRectF());
 	}
 	if (m_bWndHiliAnimating)
 	{
@@ -856,15 +864,13 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 			m_bWndHiliAnimating = FALSE;
 			k = 1.f;
 		}
-		if (bPartialDirty)
-			eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
+		eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
 		m_rcWndHili.left = (m_rcWndHiliSrc.left * (1.f - k)) + (m_rcWndHiliDst.left * k);
 		m_rcWndHili.top = (m_rcWndHiliSrc.top * (1.f - k)) + (m_rcWndHiliDst.top * k);
 		m_rcWndHili.right = (m_rcWndHiliSrc.right * (1.f - k)) + (m_rcWndHiliDst.right * k);
 		m_rcWndHili.bottom = (m_rcWndHiliSrc.bottom * (1.f - k)) + (m_rcWndHiliDst.bottom * k);
-		if (bPartialDirty)
-			eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
-		if (bPartialDirty)
+		eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
+		if (m_TcWndTip.GetTextLayout())
 		{
 			m_TcWndTip.GetTextLayout()->GetMetrics(&tm);
 			eck::UnionRect(rcInvalid, rcInvalid, {
@@ -874,8 +880,18 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 		}
 		m_ptWndTip.x = (m_ptWndTipSrc.x * (1.f - k)) + (m_ptWndTipDst.x * k);
 		m_ptWndTip.y = (m_ptWndTipSrc.y * (1.f - k)) + (m_ptWndTipDst.y * k);
-		if (bPartialDirty)
+		if (m_TcWndTip.GetTextLayout())
+			eck::UnionRect(rcInvalid, rcInvalid, {
+				m_ptWndTip.x,m_ptWndTip.y,
+				m_ptWndTip.x + tm.width,
+				m_ptWndTip.y + tm.height });
+	}
+	else if (App->GetOpt().bWndHilight)
+	{
+		eck::UnionRect(rcInvalid, rcInvalid, m_rcWndHili);
+		if (m_TcWndTip.GetTextLayout())
 		{
+			m_TcWndTip.GetTextLayout()->GetMetrics(&tm);
 			eck::UnionRect(rcInvalid, rcInvalid, {
 					m_ptWndTip.x,m_ptWndTip.y,
 					m_ptWndTip.x + tm.width,
@@ -923,13 +939,9 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 			m_ptCursor.x + m_fCursorLocateRadius, m_ptCursor.y + m_fCursorLocateRadius });
 		m_fCursorLocateAlpha = 1.f - k;
 	}
-	if (bPartialDirty)
-	{
-		RECT rc;
-		eck::CeilRect(rcInvalid, rc);
-		ElemToClient(rc);
-		InvalidateRect(rc);
-	}
-	else
-		InvalidateRect();
+	RECT rc;
+	eck::CeilRect(rcInvalid, rc);
+	ElemToClient(rc);
+	ExtendDirtyRect(rc);
+	InvalidateRect(rc);
 }

@@ -5,3 +5,8 @@ void HSV2RGB(float h, float s, float v,
 D2D1_COLOR_F CalcRainbowColor(ULONGLONG ullTick);
 
 D2D1_COLOR_F CalcRainbowColorWithStep(ULONGLONG ullTick, int nStep);
+
+EckInlineCe void ExtendDirtyRect(RECT& rc)
+{
+	eck::InflateRect(rc, 3, 3);
+}

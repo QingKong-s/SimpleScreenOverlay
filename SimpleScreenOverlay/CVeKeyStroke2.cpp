@@ -642,7 +642,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 	RECT rc;
 	eck::CeilRect(rcUpdate, rc);
 	ElemToClient(rc);
-	eck::InflateRect(rc, 3, 3);
+	ExtendDirtyRect(rc);
 	InvalidateRect(rc);
 }
 

@@ -251,15 +251,15 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		//===滚轮显示
 		if (m_eWheel != Wheel::None && App->GetOpt().bShowWheel)
 		{
-			const auto r = (float)VeCxWheelIndicator;
-			eck::UnionRect(rcUpdate, rcUpdate, {
-					m_ptWheelIndicator.x,m_ptWheelIndicator.y,
-					m_ptWheelIndicator.x + r,m_ptWheelIndicator.y + r
-				});
+			constexpr auto cxy = (float)VeCxWheelIndicator;
+			const auto xOld = m_ptWheelIndicator.x;
+			const auto yOld = m_ptWheelIndicator.y;
 			UpdateWheelIndicatorPos();
 			eck::UnionRect(rcUpdate, rcUpdate, {
-					m_ptWheelIndicator.x,m_ptWheelIndicator.y,
-					m_ptWheelIndicator.x + r,m_ptWheelIndicator.y + r
+					std::min(xOld, m_ptWheelIndicator.x),
+					std::min(yOld, m_ptWheelIndicator.y),
+					std::max(xOld, m_ptWheelIndicator.x) + cxy,
+					std::max(yOld, m_ptWheelIndicator.y) + cxy
 				});
 			bUpdate = TRUE;
 		}
@@ -269,7 +269,7 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 			eck::CeilRect(rcUpdate, rc);
 			ElemToClient(rc);
 			ExtendDirtyRect(rc);
-			InvalidateRect(rcUpdate);
+			InvalidateRect(rc);
 		}
 	}
 	break;

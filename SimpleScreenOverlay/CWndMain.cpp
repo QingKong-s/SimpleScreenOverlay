@@ -127,31 +127,21 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 			n[cEvt].Vk = ri.data.keyboard.VKey;
 			const auto bRepeat = n[cEvt].bRepeat;
 			++cEvt;
-			if (
+			if (!bRepeat && (
 				ri.data.keyboard.VKey == VK_CONTROL ||
 				ri.data.keyboard.VKey == VK_LCONTROL ||
-				ri.data.keyboard.VKey == VK_RCONTROL)
+				ri.data.keyboard.VKey == VK_RCONTROL))
 			{
-				BOOL bDbCtrl{};
-				if (!bRepeat)
+				const auto t = NtGetTickCount64();
+				if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime() / 2)
 				{
-					const auto t = NtGetTickCount64();
-					if (UINT(t - m_dwLastCtrlTick) <= GetDoubleClickTime())
-					{
-						eNotify[cEvt] = Notify::DoubleCtrl;
-						n[cEvt].bRepeat = TRUE;
-						++cEvt;
-						bDbCtrl = TRUE;
-					}
-					m_dwLastCtrlTick = NtGetTickCount64();
-				}
-				if (!bDbCtrl)
-				{
-					eNotify[cEvt] = Notify::SingleCtrl;
+					eNotify[cEvt] = Notify::DoubleCtrl;
+					n[cEvt].bRepeat = TRUE;
 					++cEvt;
 				}
+				m_dwLastCtrlTick = NtGetTickCount64();
 			}
-			
+
 			if (ri.data.keyboard.VKey == VK_F7)
 			{// HACK
 				SwitchMenuShowing(!m_bShowMenu);
@@ -164,6 +154,13 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 			eNotify[cEvt] = Notify::GlobalKeyUp;
 			n[cEvt].Vk = ri.data.keyboard.VKey;
 			++cEvt;
+			if (ri.data.keyboard.VKey == VK_CONTROL ||
+				ri.data.keyboard.VKey == VK_LCONTROL ||
+				ri.data.keyboard.VKey == VK_RCONTROL)
+			{
+				eNotify[cEvt] = Notify::SingleCtrl;
+				++cEvt;
+			}
 		}
 		for (size_t i = 0; i < cEvt; ++i)
 			App->GetSignal().Emit(eNotify[i], n[i]);

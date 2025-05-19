@@ -547,7 +547,7 @@ void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
 		}
 		else
 		{
-			if ((e.msRemain -= iMs) <= 0)
+			if (!(e.uFlags & KIF_KEYDOWN) && (e.msRemain -= iMs) <= 0)
 			{
 				bDelete = TRUE;
 				e.eState = ItemState::Deleted;

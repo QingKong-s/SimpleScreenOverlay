@@ -35,6 +35,18 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 		}
 	}
 	break;
+	case Notify::GlobalKeyDown:
+	{
+		if (App->GetOpt().bSpotLight && m_bShowSpotLight)
+		{
+			ECK_DUILOCK;
+			m_bShowSpotLight = FALSE;
+			m_bSpotLightReverse = TRUE;
+			m_bSpotLightAnimating = TRUE;
+			GetWnd()->WakeRenderThread();
+		}
+	}
+	break;
 	case Notify::GlobalMouseDown:
 	{
 		BOOL bWake{};

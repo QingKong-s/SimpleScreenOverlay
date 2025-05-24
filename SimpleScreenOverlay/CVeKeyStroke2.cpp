@@ -4,41 +4,41 @@
 
 constexpr std::wstring_view KeyName[]
 {
-	LR"()"sv,
+	{},
 	LR"(LMB)"sv,
 	LR"(RMB)"sv,
-	LR"()"sv,
+	{},
 	LR"(MMB)"sv,
 	LR"(X1)"sv,
 	LR"(X2)"sv,
-	LR"()"sv,
+	{},
 	LR"(Back)"sv,
 	LR"(Tab)"sv,
-	LR"()"sv,
-	LR"()"sv,
+	{},
+	{},
 	LR"(Clear)"sv,
 	LR"(Enter)"sv,
-	LR"()"sv,
-	LR"()"sv,
+	{},
+	{},
 	LR"(Shift)"sv,
 	LR"(Ctrl)"sv,
 	LR"(Alt)"sv,
 	LR"(Pause)"sv,
-	LR"(CapsLk)"sv,
-	LR"(IME 假名/谚文)"sv,
-	LR"(IME 打开)"sv,
-	LR"(IME Junja)"sv,
-	LR"(IME 完成)"sv,
-	LR"(IME 汉字)"sv,
-	LR"(IME 关闭)"sv,
+	LR"(Caps Lk)"sv,
+	{},
+	{},
+	{},
+	{},
+	{},
+	{},
 	LR"(Esc)"sv,
-	LR"(IME 转换)"sv,
-	LR"(IME 不转换)"sv,
-	LR"(IME 接受)"sv,
-	LR"(IME 模式更改)"sv,
+	{},
+	{},
+	{},
+	{},
 	LR"(--)"sv,
-	LR"(Page Up)"sv,
-	LR"(Page Down)"sv,
+	LR"(Pg Up)"sv,
+	LR"(Pg Dn)"sv,
 	LR"(End)"sv,
 	LR"(Home)"sv,
 	LR"(←)"sv,
@@ -48,7 +48,7 @@ constexpr std::wstring_view KeyName[]
 	LR"(Select)"sv,
 	LR"(Print)"sv,
 	LR"(Execute)"sv,
-	LR"(PrtSrc)"sv,
+	LR"(Prt Src)"sv,
 	LR"(Ins)"sv,
 	LR"(Del)"sv,
 	LR"(Help)"sv,
@@ -95,8 +95,8 @@ constexpr std::wstring_view KeyName[]
 	LR"(X)"sv,
 	LR"(Y)"sv,
 	LR"(Z)"sv,
-	LR"(LWin)"sv,
-	LR"(RWin)"sv,
+	LR"(L Win)"sv,
+	LR"(R Win)"sv,
 	LR"(Apps)"sv,
 	{},
 	LR"(Sleep)"sv,
@@ -148,8 +148,8 @@ constexpr std::wstring_view KeyName[]
 	{},
 	{},
 	{},
-	LR"(NumLk)"sv,
-	LR"(ScrLk)"sv,
+	LR"(Num Lk)"sv,
+	LR"(Scr Lk)"sv,
 	{},
 	{},
 	{},
@@ -177,15 +177,15 @@ constexpr std::wstring_view KeyName[]
 	LR"(BrsSch)"sv,
 	LR"(BrsFav)"sv,
 	LR"(BrsHome)"sv,
-	LR"(MdSlt)"sv,
+	LR"(Med Slt)"sv,
 	LR"(Vol-)"sv,
 	LR"(Vol+)"sv,
-	LR"(MdNxt)"sv,
-	LR"(MdPrv)"sv,
-	LR"(MdStop)"sv,
-	LR"(MdPP)"sv,
+	LR"(Med Nxt)"sv,
+	LR"(Med Prv)"sv,
+	LR"(Med Stop)"sv,
+	LR"(Med PP)"sv,
 	LR"(EMail)"sv,
-	LR"(SelMd)"sv,
+	LR"(Sel Med)"sv,
 	LR"(Run1)"sv,
 	LR"(Run2)"sv,
 	{},
@@ -227,13 +227,13 @@ constexpr std::wstring_view KeyName[]
 	LR"(\)"sv,// |
 	LR"(])"sv,// }
 	LR"(')"sv,// "
-	LR"(其他键盘字符)"sv,
 	{},
 	{},
-	LR"(<> /|)"sv,
 	{},
 	{},
-	LR"(IME Process)"sv,
+	{},
+	{},
+	{},
 	{},
 	{},
 	{},
@@ -356,13 +356,14 @@ void CVeKeyStroke2::IkOnKeyDown(UINT Vk)
 		it->x = it->xSrc;
 		it->y = it->ySrc;
 		IkpBeginRePos();
+		GetWnd()->WakeRenderThread();
 	}
 	else
 	{
 		if (!(it->uFlags & KIF_KEYDOWN))
 			it->uFlags |= KIF_KEYDOWN;
+		IkpInvalidateRect(*it);
 	}
-	GetWnd()->WakeRenderThread();
 }
 
 void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
@@ -373,6 +374,7 @@ void CVeKeyStroke2::IkOnKeyUp(UINT Vk)
 		return;
 	if (it->uFlags & KIF_KEYDOWN)
 		it->uFlags &= ~KIF_KEYDOWN;
+	IkpInvalidateRect(*it);
 }
 
 void CVeKeyStroke2::IkpBeginRePos()
@@ -446,6 +448,20 @@ void CVeKeyStroke2::IkpCancelJump(ITEM& e)
 	e.xSrc = e.x;
 	e.ySrc = e.y;
 	e.msTime = 0;
+}
+
+void CVeKeyStroke2::IkpInvalidateRect(ITEM& e)
+{
+	D2D1_RECT_F rcF;
+	rcF.left = e.x;
+	rcF.top = e.y;
+	rcF.right = rcF.left + m_cxyBlock;
+	rcF.bottom = rcF.top + m_cxyBlock;
+	RECT rc;
+	eck::CeilRect(rcF, rc);
+	ElemToClient(rc);
+	ExtendDirtyRect(rc);
+	InvalidateRect(rc);
 }
 
 LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)

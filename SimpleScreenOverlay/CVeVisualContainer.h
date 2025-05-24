@@ -129,8 +129,10 @@ public:
 
 	BOOL STDMETHODCALLTYPE IsValid()
 	{
+		const auto bRainbow = App->GetOpt().bRainbowColor;
 		return m_bTimeLineActive || m_bSpotLightAnimating ||
 			!m_vClick.empty() || m_bLocatingCursor ||
-			(App->GetOpt().bRainbowColor && App->GetOpt().bWndHilight);
+			(bRainbow && App->GetOpt().bWndHilight) ||
+			(bRainbow && App->GetOpt().bCrosshair);
 	}
 };

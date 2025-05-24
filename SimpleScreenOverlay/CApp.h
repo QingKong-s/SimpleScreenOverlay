@@ -55,6 +55,8 @@ public:
 		CrWheelIndicator,
 		CrWheelIndicatorBorder,
 
+		CrLine,
+
 		CrMax
 	};
 
@@ -80,6 +82,8 @@ public:
 
 		{ 1.f,1.f,1.f,0.6f },
 		{ 0.f,0.f,0.f,0.6f },
+
+		{ 0.f,0.f,0.f,0.6f },
 	};
 
 	constexpr static D2D1_COLOR_F ColorDark[CrMax]
@@ -103,6 +107,8 @@ public:
 		{ 0.f,0.f,0.f,0.5f },
 
 		{ 0.f,0.f,0.f,0.6f },
+		{ 1.f,1.f,1.f,0.6f },
+
 		{ 1.f,1.f,1.f,0.6f },
 	};
 private:

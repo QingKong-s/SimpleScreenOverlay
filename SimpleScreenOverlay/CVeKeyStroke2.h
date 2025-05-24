@@ -62,6 +62,8 @@ private:
 
 	void IkpCancelJump(ITEM& e);
 
+	void IkpInvalidateRect(ITEM& e);
+
 	void CalcKeyItemNormalPos(size_t idx, _Out_ float& x, _Out_ float& y);
 
 	void PaintUnit(const D2D1_RECT_F& rc, float cxLine, ITEM& e);

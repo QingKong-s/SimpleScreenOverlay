@@ -275,6 +275,12 @@ void CVeVisualContainer::OnAppEvent(Notify eNotify, SSONOTIFY& n)
 				});
 			bUpdate = TRUE;
 		}
+		//===准星线
+		if (App->GetOpt().bCrosshair)
+		{
+			eck::UnionRect(rcUpdate, rcUpdate, GetViewRectF());
+			bUpdate = TRUE;
+		}
 		if (bUpdate)
 		{
 			RECT rc;
@@ -545,7 +551,10 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->SetPrimitiveBlend(eOldBlend);
 		}
 		//===准星线
-		m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
+		if (App->GetOpt().bRainbowColor)
+			m_pBrush->SetColor(CalcRainbowColor(NtGetTickCount64()));
+		else
+			m_pBrush->SetColor(App->GetColor(CApp::CrLine));
 		if (App->GetOpt().bCrosshair)
 		{
 			const auto d = App->GetOpt().dCrosshairCursorGap;
@@ -950,6 +959,8 @@ void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
 			m_ptCursor.x + m_fCursorLocateRadius, m_ptCursor.y + m_fCursorLocateRadius });
 		m_fCursorLocateAlpha = 1.f - k;
 	}
+	if (App->GetOpt().bRainbowColor && App->GetOpt().bCrosshair)
+		eck::UnionRect(rcInvalid, rcInvalid, GetViewRectF());
 	RECT rc;
 	eck::CeilRect(rcInvalid, rc);
 	ElemToClient(rc);

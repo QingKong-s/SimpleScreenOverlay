@@ -125,9 +125,9 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void STDMETHODCALLTYPE Tick(int iMs);
+	void Tick(int iMs);
 
-	BOOL STDMETHODCALLTYPE IsValid()
+	BOOL IsValid()
 	{
 		const auto bRainbow = App->GetOpt().bRainbowColor;
 		return m_bTimeLineActive || m_bSpotLightAnimating ||

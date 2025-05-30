@@ -13,9 +13,9 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void STDMETHODCALLTYPE Tick(int iMs);
+	void Tick(int iMs);
 
-	BOOL STDMETHODCALLTYPE IsValid()
+	BOOL IsValid()
 	{
 		return App->GetOpt().bRainbowColor && m_bTimeLineActive;
 	}

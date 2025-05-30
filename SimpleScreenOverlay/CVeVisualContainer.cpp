@@ -856,7 +856,7 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void STDMETHODCALLTYPE CVeVisualContainer::Tick(int iMs)
+void CVeVisualContainer::Tick(int iMs)
 {
 	DWRITE_TEXT_METRICS tm;
 	D2D1_RECT_F rcInvalid{};

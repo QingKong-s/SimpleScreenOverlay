@@ -41,9 +41,9 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void STDMETHODCALLTYPE Tick(int iMs) override { InvalidateRect(); }
+	void Tick(int iMs) override { InvalidateRect(); }
 
-	BOOL STDMETHODCALLTYPE IsValid() override
+	BOOL IsValid() override
 	{
 		return App->GetOpt().bRainbowColor && App->GetOpt().bKeyStroke;
 	}

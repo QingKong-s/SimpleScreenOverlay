@@ -72,6 +72,6 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid() { return !m_vItem.empty(); }
+	void Tick(int iMs);
+	BOOL IsValid() { return !m_vItem.empty(); }
 };

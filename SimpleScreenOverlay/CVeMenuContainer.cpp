@@ -356,7 +356,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void STDMETHODCALLTYPE CVeMenuContainer::Tick(int iMs)
+void CVeMenuContainer::Tick(int iMs)
 {
 	for (auto& e : m_MenuBox)
 		e.InvalidateRect();

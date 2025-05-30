@@ -518,7 +518,7 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void STDMETHODCALLTYPE CVeKeyStroke2::Tick(int iMs)
+void CVeKeyStroke2::Tick(int iMs)
 {
 	if (m_vItem.empty())
 		return;

@@ -55,9 +55,9 @@ public:
 	LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e);
 #endif
 
-	void STDMETHODCALLTYPE Tick(int iMs);
+	void Tick(int iMs);
 
-	BOOL STDMETHODCALLTYPE IsValid() { return m_bMenuAn; }
+	BOOL IsValid() { return m_bMenuAn; }
 
 	void SwitchMenuShowing(BOOL bShow);
 

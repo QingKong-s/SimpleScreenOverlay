@@ -62,21 +62,21 @@ public:
 
 	constexpr static D2D1_COLOR_F ColorLight[CrMax]
 	{
-		eck::ColorrefToD2dColorF(eck::Colorref::White),
+		eck::ColorrefToD2DColorF(eck::Colorref::White),
 
-		eck::ColorrefToD2dColorF(RGB(3, 201, 255), 0.7f),
-		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(67, 68, 69), 0.65f),
-		eck::ColorrefToD2dColorF(RGB(20, 21, 22), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(3, 201, 255), 0.7f),
+		eck::ColorrefToD2DColorF(RGB(18, 19, 20), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(67, 68, 69), 0.65f),
+		eck::ColorrefToD2DColorF(RGB(20, 21, 22), 0.6f),
 
 		{ 1.f,1.f,1.f,0.6f },
-		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.3f),
-		eck::ColorrefToD2dColorF(RGB(20, 150, 150), 0.3f),
+		eck::ColorrefToD2DColorF(RGB(20, 20, 20), 0.3f),
+		eck::ColorrefToD2DColorF(RGB(20, 150, 150), 0.3f),
 
 		{ 0.f,0.f,0.f,0.1f },
 
 		{ 1.f,1.f,1.f,0.6f },
-		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(20, 20, 20), 0.6f),
 
 		{ 0.f,0.f,0.f,0.5f },
 
@@ -88,21 +88,21 @@ public:
 
 	constexpr static D2D1_COLOR_F ColorDark[CrMax]
 	{
-		eck::ColorrefToD2dColorF(eck::Colorref::White),
+		eck::ColorrefToD2DColorF(eck::Colorref::White),
 
-		eck::ColorrefToD2dColorF(RGB(4, 170, 211), 0.7f),
-		eck::ColorrefToD2dColorF(RGB(18, 19, 20), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(70, 71, 72), 0.6f),
-		eck::ColorrefToD2dColorF(RGB(110, 111, 112), 0.65f),
+		eck::ColorrefToD2DColorF(RGB(4, 170, 211), 0.7f),
+		eck::ColorrefToD2DColorF(RGB(18, 19, 20), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(70, 71, 72), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(110, 111, 112), 0.65f),
 
 		{ 1.f,1.f,1.f,0.6f },
-		eck::ColorrefToD2dColorF(RGB(80, 80, 80), 0.3f),
-		eck::ColorrefToD2dColorF(RGB(20, 150, 150), 0.3f),
+		eck::ColorrefToD2DColorF(RGB(80, 80, 80), 0.3f),
+		eck::ColorrefToD2DColorF(RGB(20, 150, 150), 0.3f),
 
 		{ 1.f,1.f,1.f,0.1f },
 
 		{ 1.f,1.f,1.f,0.6f },
-		eck::ColorrefToD2dColorF(RGB(20, 20, 20), 0.6f),
+		eck::ColorrefToD2DColorF(RGB(20, 20, 20), 0.6f),
 
 		{ 0.f,0.f,0.f,0.5f },
 

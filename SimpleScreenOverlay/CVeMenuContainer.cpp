@@ -144,7 +144,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case Dui::LTE_HOTITEMCHANED:
 		{
-			const auto p = (Dui::LTN_HOTITEMCHANGE*)lParam;
+			const auto p = (Dui::NMLTHOTITEMCHANGE*)lParam;
 			if (p->idx < 0)
 			{
 				m_pTlTip.Clear();
@@ -182,7 +182,7 @@ LRESULT CVeMenuContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case Dui::LTE_ITEMCHANED:
 		{
-			const auto p = (Dui::LTN_ITEMCHANGE*)lParam;
+			const auto p = (Dui::NMLTITEMCHANGE*)lParam;
 			auto& Opt = App->GetOpt();
 			const auto bSel = !!(p->uFlagsNew & Dui::LEIF_SELECTED);
 			if ((WPARAM)&m_MenuBox[MenuIdxProgram] == wParam)

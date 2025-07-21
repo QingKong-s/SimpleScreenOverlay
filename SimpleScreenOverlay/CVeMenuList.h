@@ -8,7 +8,7 @@ struct ML_DISPINFO : Dui::DUINMHDR
 
 class CVeMenuList final : public Dui::CListTemplate
 {
-	void LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint) override;
+	void LVPaintItem(const D2D1_RECT_F& rcPaint, Dui::NMLTCUSTOMDRAW& nm, LRESULT r) override;
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	

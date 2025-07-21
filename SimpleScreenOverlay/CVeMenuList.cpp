@@ -2,30 +2,30 @@
 #include "CVeMenuList.h"
 #include "CWndMain.h"
 
-void CVeMenuList::LVPaintItem(int idx, int idxGroup, const D2D1_RECT_F& rcPaint)
+void CVeMenuList::LVPaintItem(const D2D1_RECT_F& rcPaint, Dui::NMLTCUSTOMDRAW& nm, LRESULT r)
 {
 	const float Padding = GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
 	const float Padding2 = GetTheme()->GetMetrics(Dui::Metrics::LargePadding);
 
 	D2D1_RECT_F rcFill, rcItem;
-	GetItemRect(idx, rcItem);
+	GetItemRect(nm.idx, rcItem);
 	eck::IntersectRect(rcFill, rcItem, rcPaint);
-	if (GetItemState(idx) & Dui::LEIF_SELECTED)
+	if (GetItemState(nm.idx) & Dui::LEIF_SELECTED)
 		if (App->GetOpt().bRainbowColor)
-			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), idx * 2));
+			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), nm.idx * 2));
 		else
 			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuSelected));
 	else
-		if (m_idxHot == idx)
+		if (m_idxHot == nm.idx)
 			m_pBrush->SetColor(App->GetColor(CApp::CrDefFuncMenuHot));
 		else
 			goto SkipFill;
 	m_pDC->FillRectangle(rcFill, m_pBrush);
 SkipFill:
-	auto& e = m_vItem[idx];
+	auto& e = m_vItem[nm.idx];
 
 	ML_DISPINFO di{ UIE_MENU_GETDISPINFO };
-	di.idx = idx;
+	di.idx = nm.idx;
 	GenElemNotify(&di);
 
 	if (di.cchText && !e.pLayout.Get())
@@ -41,8 +41,8 @@ SkipFill:
 	if (e.pLayout.Get())
 	{
 		if (App->GetOpt().bRainbowColor &&
-			GetItemState(idx) & Dui::LEIF_SELECTED)
-			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), idx * 2 + 200));
+			GetItemState(nm.idx) & Dui::LEIF_SELECTED)
+			m_pBrush->SetColor(CalcRainbowColorWithStep(NtGetTickCount64(), nm.idx * 2 + 200));
 		else
 		m_pBrush->SetColor(App->GetColor(CApp::CrText));
 		m_pDC->DrawTextLayout({ 0,rcItem.top }, e.pLayout.Get(),

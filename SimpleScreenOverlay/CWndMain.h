@@ -5,61 +5,61 @@
 class CWndMain final : public Dui::CDuiWnd, public eck::CFixedTimeLine
 {
 private:
-	constexpr static float BlurStdDev = 20.0f;
+    constexpr static float BlurStdDev = 20.0f;
 
-	eck::THREADCTX* m_ptcUiThread{};
+    eck::THREADCTX* m_ptcUiThread{};
 
-	CVeMenuContainer m_MenuContainer{};
-	CVeVisualContainer m_VisualContainer{};
+    CVeMenuContainer m_MenuContainer{};
+    CVeVisualContainer m_VisualContainer{};
 
-	float m_msMenuAn{};
-	Dui::CCompositorPageAn* m_pCompMenuSwitch{};
+    float m_msMenuAn{};
+    Dui::CCompositorPageAn* m_pCompMenuSwitch{};
 
-	ULONGLONG m_dwLastCtrlTick{};
-	BOOLEAN m_bKeyDown[256]{};
+    ULONGLONG m_dwLastCtrlTick{};
+    BOOLEAN m_bKeyDown[256]{};
 
-	BOOLEAN m_bShowMenu{};
-	BOOLEAN m_bMenuAn{};
-	BOOLEAN m_bBlurBkgEnabled{ 2 };
+    BOOLEAN m_bShowMenu{};
+    BOOLEAN m_bMenuAn{};
+    BOOLEAN m_bBlurBkgEnabled{ 2 };
 
-	UINT m_uMsgTaskbarCreated{};
+    UINT m_uMsgTaskbarCreated{};
 
-	SIZE m_CursorSize{};
+    SIZE m_CursorSize{};
 
-	CApp::HSlot m_hSlot{};
+    CApp::HSlot m_hSlot{};
 
 #if SSO_WINRT
-	IInteropCompositorFactoryPartner* m_pInteropFactory{};
-	IDCompositionDesktopDevice* m_pDcDevice{};
-	com_ptr<IDCompositionTarget> m_pDcTarget{};
+    IInteropCompositorFactoryPartner* m_pInteropFactory{};
+    IDCompositionDesktopDevice* m_pDcDevice{};
+    com_ptr<IDCompositionTarget> m_pDcTarget{};
 
-	Compositor m_Compositor{};
-	DesktopWindowTarget m_Target{ nullptr };
-	SpriteVisual m_RootVisual{ nullptr };
-	Visual m_ContentVisual{ nullptr };
+    Compositor m_Compositor{};
+    DesktopWindowTarget m_Target{ nullptr };
+    SpriteVisual m_RootVisual{ nullptr };
+    Visual m_ContentVisual{ nullptr };
 
-	CompositionEffectBrush m_BkDropBrush{ nullptr };
+    CompositionEffectBrush m_BkDropBrush{ nullptr };
 #endif
 
-	BOOL InitRawInput();
+    BOOL InitRawInput();
 
-	void OnInput(WPARAM wParam, LPARAM lParam);
+    void OnInput(WPARAM wParam, LPARAM lParam);
 
-	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+    void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
-	void RePosWindow();
+    void RePosWindow();
 public:
-	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 #if SSO_WINRT
-	LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e);
+    LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e);
 #endif
 
-	void Tick(int iMs);
+    void TlTick(int iMs) override;
 
-	BOOL IsValid() { return m_bMenuAn; }
+    BOOL TlIsValid() override { return m_bMenuAn; }
 
-	void SwitchMenuShowing(BOOL bShow);
+    void SwitchMenuShowing(BOOL bShow);
 
-	EckInlineNdCe auto GetCursorSize() const { return m_CursorSize; }
+    EckInlineNdCe auto GetCursorSize() const { return m_CursorSize; }
 };

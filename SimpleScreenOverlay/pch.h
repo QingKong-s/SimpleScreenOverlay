@@ -1,10 +1,7 @@
 ﻿#pragma once
-#define ECK_OPT_NO_YYJSON 1
-#define ECK_OPT_NO_PUGIXML 1
-
 #define _CRTDBG_MAP_ALLOC 1
 
-#define SSO_WINRT 1
+#define SSO_WINRT 0
 
 #include "eck\PchInc.h"
 #include "eck\CCommDlg.h"
@@ -14,6 +11,7 @@
 #include "eck\CDuiListTemplate.h"
 #include "eck\UIAccess.h"
 #include "eck\CIniExt.h"
+#include "eck\DwLayoutPath.h"
 
 #if SSO_WINRT
 #include "eck\WinRtDCompInterop.h"

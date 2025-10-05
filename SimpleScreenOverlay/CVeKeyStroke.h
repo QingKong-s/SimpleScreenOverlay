@@ -4,47 +4,47 @@
 class CVeKeyStroke final : public Dui::CElem, public eck::CFixedTimeLine
 {
 private:
-	enum class Key
-	{
-		W,
-		A,
-		S,
-		D,
+    enum class Key
+    {
+        W,
+        A,
+        S,
+        D,
 
-		SingleCharEnd,
+        SingleCharEnd,
 
-		Space = SingleCharEnd,
-		Shift,
-		MLeft,
-		MRight,
+        Space = SingleCharEnd,
+        Shift,
+        MLeft,
+        MRight,
 
-		Max,
-	};
-	CApp::HSlot m_hSlot{};
-	ID2D1SolidColorBrush* m_pBrush{};
-	ID2D1SolidColorBrush* m_pBrushForegnd{};
-	float m_cxyBlock{};
-	float m_cySpaceBtn{};
-	float m_cyMouseBtn{};
+        Max,
+    };
+    CApp::HSlot m_hSlot{};
+    ID2D1SolidColorBrush* m_pBrush{};
+    ID2D1SolidColorBrush* m_pBrushForegnd{};
+    float m_cxyBlock{};
+    float m_cySpaceBtn{};
+    float m_cyMouseBtn{};
 
-	BOOLEAN m_bKeyDown[(size_t)Key::Max]{};
-	IDWriteTextLayout* m_pTl[(size_t)Key::Max]{};
+    BOOLEAN m_bKeyDown[(size_t)Key::Max]{};
+    IDWriteTextLayout* m_pTl[(size_t)Key::Max]{};
 
-	BOOLEAN m_bLeft{ TRUE };
+    BOOLEAN m_bLeft{ TRUE };
 
-	Key VkToKey(UINT vk);
-	UINT KeyToVk(Key eKey);
+    Key VkToKey(UINT vk);
+    UINT KeyToVk(Key eKey);
 
-	void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+    void OnAppEvent(Notify eNotify, SSONOTIFY& n);
 
-	void PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey);
+    void PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey);
 public:
-	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void Tick(int iMs) override { InvalidateRect(); }
+    void TlTick(int iMs) override { InvalidateRect(); }
 
-	BOOL IsValid() override
-	{
-		return App->GetOpt().bRainbowColor && App->GetOpt().bKeyStroke;
-	}
+    BOOL TlIsValid() override
+    {
+        return App->GetOpt().bRainbowColor && App->GetOpt().bKeyStroke;
+    }
 };

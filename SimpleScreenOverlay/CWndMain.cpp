@@ -199,7 +199,7 @@ void CWndMain::RePosWindow()
 		mi.rcWork.right - mi.rcWork.left,
 		mi.rcWork.bottom - mi.rcWork.top,
 		SWP_NOZORDER | SWP_NOACTIVATE);
-	const RECT rc{ 0,0,GetClientWidthLog(),GetClientHeightLog() };
+	const D2D1_RECT_F rc{ 0,0,GetClientWidthLog(),GetClientHeightLog() };
 	m_MenuContainer.SetRect(rc);
 	m_VisualContainer.SetRect(rc);
 }
@@ -221,7 +221,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case 8233:
 		{
-			m_CursorSize = eck::GetCursorSize(GetUserDpiValue());
+			m_CursorSize = eck::GetCursorSize(GetUserDpi());
 			SSONOTIFY n{};
 			App->GetSignal().Emit(Notify::CursorSettingChanged, n);
 		}
@@ -291,7 +291,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DcvInit(pDcVisual.get(), pDcDevice);
 #endif// SSO_WINRT
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
-		m_CursorSize = eck::GetCursorSize(GetUserDpiValue());
+		BbrDelete();
+		m_CursorSize = eck::GetCursorSize(GetUserDpi());
 
 		m_pCompMenuSwitch = new Dui::CCompositorPageAn{};
 		m_pCompMenuSwitch->InitAsTranslationOpacity();
@@ -362,7 +363,7 @@ LRESULT CWndMain::OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e)
 }
 #endif// SSO_WINRT
 
-void CWndMain::Tick(int iMs)
+void CWndMain::TlTick(int iMs)
 {
 	if (m_bMenuAn)
 	{
@@ -400,7 +401,7 @@ void CWndMain::Tick(int iMs)
 		}
 		m_pCompMenuSwitch->Opacity = k;
 		const auto cyScr = GetClientHeightLog();
-		m_pCompMenuSwitch->Dy = int(-(cyScr / 6.f) * (1.f - k));
+		m_pCompMenuSwitch->Dy = -(cyScr / 6.f) * (1.f - k);
 		m_MenuContainer.CompReCalcCompositedRect();
 		Redraw();
 	}

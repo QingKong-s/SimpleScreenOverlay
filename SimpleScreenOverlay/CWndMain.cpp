@@ -169,7 +169,7 @@ void CWndMain::OnInput(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void CWndMain::OnAppEvent(Notify eNotify, SSONOTIFY& n)
+void CWndMain::OnAppEvent(Notify eNotify, const SSONOTIFY& n)
 {
 	switch (eNotify)
 	{

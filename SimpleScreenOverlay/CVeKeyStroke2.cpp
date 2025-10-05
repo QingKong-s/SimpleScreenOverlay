@@ -265,7 +265,7 @@ constexpr float FadeInOutAnDuration = 2000.f;
 constexpr float RePosAnDuration = 1000.f;
 constexpr float JumpAnDuration = 300.f;
 
-void CVeKeyStroke2::OnAppEvent(Notify eNotify, SSONOTIFY& n)
+void CVeKeyStroke2::OnAppEvent(Notify eNotify, const SSONOTIFY& n)
 {
     switch (eNotify)
     {

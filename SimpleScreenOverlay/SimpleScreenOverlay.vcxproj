@@ -283,11 +283,19 @@
   <ItemGroup>
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CGrTextCache.h" />
+    <ClInclude Include="CModClickShow.h" />
+    <ClInclude Include="CModCrosshair.h" />
+    <ClInclude Include="CModCursorLocation.h" />
+    <ClInclude Include="CModCursorPos.h" />
+    <ClInclude Include="CModWheelIndicator.h" />
+    <ClInclude Include="CModWndMarker.h" />
     <ClInclude Include="CVeFunctionMenu.h" />
     <ClInclude Include="CVeKeyStroke.h" />
     <ClInclude Include="CVeKeyStroke2.h" />
     <ClInclude Include="CVeMenuContainer.h" />
     <ClInclude Include="CVeMenuList.h" />
+    <ClInclude Include="CModBase.h" />
+    <ClInclude Include="CModSpotLight.h" />
     <ClInclude Include="CVeVisualContainer.h" />
     <ClInclude Include="CWndMain.h" />
     <ClInclude Include="pch.h" />
@@ -299,11 +307,18 @@
   <ItemGroup>
     <ClCompile Include="CApp.cpp" />
     <ClCompile Include="CGrTextCache.cpp" />
+    <ClCompile Include="CModClickShow.cpp" />
+    <ClCompile Include="CModCrosshair.cpp" />
+    <ClCompile Include="CModCursorLocation.cpp" />
+    <ClCompile Include="CModCursorPos.cpp" />
+    <ClCompile Include="CModWheelIndicator.cpp" />
+    <ClCompile Include="CModWndMarker.cpp" />
     <ClCompile Include="CVeFunctionMenu.cpp" />
     <ClCompile Include="CVeKeyStroke.cpp" />
     <ClCompile Include="CVeKeyStroke2.cpp" />
     <ClCompile Include="CVeMenuContainer.cpp" />
     <ClCompile Include="CVeMenuList.cpp" />
+    <ClCompile Include="CModSpotLight.cpp" />
     <ClCompile Include="CVeVisualContainer.cpp" />
     <ClCompile Include="CWndMain.cpp" />
     <ClCompile Include="Entry.cpp" />

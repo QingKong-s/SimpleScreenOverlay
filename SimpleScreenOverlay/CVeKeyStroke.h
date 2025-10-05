@@ -35,7 +35,7 @@ private:
     Key VkToKey(UINT vk);
     UINT KeyToVk(Key eKey);
 
-    void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+    void OnAppEvent(Notify eNotify, const SSONOTIFY& n);
 
     void PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey);
 public:

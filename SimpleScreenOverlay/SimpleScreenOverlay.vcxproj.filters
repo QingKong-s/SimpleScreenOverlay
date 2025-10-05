@@ -25,6 +25,9 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{198b4162-ad5e-44ed-94e7-ce9727d1e347}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\模块">
+      <UniqueIdentifier>{b98953a0-921e-47a4-8aa3-e497c2bddec6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -69,6 +72,30 @@
     <ClInclude Include="Utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CModBase.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModSpotLight.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModCursorLocation.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModWndMarker.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModClickShow.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModWheelIndicator.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModCrosshair.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
+    <ClInclude Include="CModCursorPos.h">
+      <Filter>UI\模块</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -109,6 +136,27 @@
     </ClCompile>
     <ClCompile Include="Utils.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CModSpotLight.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModCursorLocation.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModWndMarker.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModClickShow.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModWheelIndicator.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModCrosshair.cpp">
+      <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CModCursorPos.cpp">
+      <Filter>UI\模块</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

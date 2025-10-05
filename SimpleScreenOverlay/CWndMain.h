@@ -45,7 +45,7 @@ private:
 
     void OnInput(WPARAM wParam, LPARAM lParam);
 
-    void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+    void OnAppEvent(Notify eNotify, const SSONOTIFY& n);
 
     void RePosWindow();
 public:

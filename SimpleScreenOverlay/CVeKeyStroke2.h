@@ -46,7 +46,7 @@ private:
     std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序
     float m_cxyBlock{};
 
-    void OnAppEvent(Notify eNotify, SSONOTIFY& n);
+    void OnAppEvent(Notify eNotify, const SSONOTIFY& n);
 
     std::vector<ITEM>::iterator IkpInsert(UINT Vk, _Out_ BOOL& bNewItem);
 

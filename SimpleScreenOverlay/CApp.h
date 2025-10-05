@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-enum class Notify
+enum class Notify : BYTE
 {
     GlobalKeyDown,		// Vk
     GlobalKeyUp,		// Vk
@@ -149,7 +149,7 @@ private:
     IDWriteTextFormat* m_pTfCommon{};
     OPT m_Opt{};
 
-    eck::CSignal<eck::NoIntercept_T, void, Notify, SSONOTIFY&> m_Sig{};
+    eck::CSignal<eck::NoIntercept_T, void, Notify, const SSONOTIFY&> m_Sig{};
 public:
     using HSlot = decltype(m_Sig)::HSlot;
 

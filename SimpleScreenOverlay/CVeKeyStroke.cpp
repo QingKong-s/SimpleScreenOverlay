@@ -35,7 +35,7 @@ UINT CVeKeyStroke::KeyToVk(Key eKey)
     return 0;
 }
 
-void CVeKeyStroke::OnAppEvent(Notify eNotify, SSONOTIFY& n)
+void CVeKeyStroke::OnAppEvent(Notify eNotify, const SSONOTIFY& n)
 {
     Key idx;
     switch (eNotify)

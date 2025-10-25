@@ -72,6 +72,9 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         SafeRelease(m_pTextLayout);
     }
     break;
+    case WM_LBUTTONDOWN:
+        SetZOrder(ECK_ELEMTOP);
+        break;
     case WM_CREATE:
     {
         m_pDC->CreateSolidColorBrush({}, &m_pBrush);

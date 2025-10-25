@@ -96,25 +96,25 @@ void CVeKeyStroke::OnAppEvent(Notify eNotify, const SSONOTIFY& n)
     break;
     case Notify::GlobalMouseMove:
     {
-        if (!App->GetOpt().bKeyStroke)
-            break;
-        POINT pt{ n.pt };
-        ScreenToClient(GetWnd()->HWnd, &pt);
-        GetWnd()->Phy2Log(pt);
-        if (eck::PtInRect(GetRectInClientF(), pt))
-            if (m_bLeft)
-            {
-                m_bLeft = FALSE;
-                SetPos(
-                    GetParentElem()->GetWidthF() - GetWidthF() - VeCxKeyStrokeMargin,
-                    GetRectF().top);
-            }
-            else
-                if (!m_bLeft)
-                {
-                    m_bLeft = TRUE;
-                    SetPos(VeCxKeyStrokeMargin, GetRectF().top);
-                }
+        //if (!App->GetOpt().bKeyStroke)
+        //    break;
+        //POINT pt{ n.pt };
+        //ScreenToClient(GetWnd()->HWnd, &pt);
+        //GetWnd()->Phy2Log(pt);
+        //if (eck::PtInRect(GetRectInClientF(), pt))
+        //    if (m_bLeft)
+        //    {
+        //        m_bLeft = FALSE;
+        //        SetPos(
+        //            GetParentElem()->GetWidthF() - GetWidthF() - VeCxKeyStrokeMargin,
+        //            GetRectF().top);
+        //    }
+        //    else
+        //        if (!m_bLeft)
+        //        {
+        //            m_bLeft = TRUE;
+        //            SetPos(VeCxKeyStrokeMargin, GetRectF().top);
+        //        }
     }
     break;
     case Notify::OptionsChanged:
@@ -140,6 +140,50 @@ void CVeKeyStroke::PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey)
     m_pDC->DrawTextLayout({ rc.left,rc.top }, m_pTl[(size_t)eKey],
         m_pBrushForegnd, Dui::DrawTextLayoutFlags);
     m_pDC->DrawRectangle(rc, m_pBrushForegnd, cxLine);
+}
+
+void CVeKeyStroke::UpdateTextLayout()
+{
+    const auto pTf = GetTextFormat();
+    if (!pTf)
+        return;
+    IDWriteTextLayout* pTlTemp{};
+    DWRITE_TEXT_METRICS tm;
+    constexpr static std::wstring_view Text[]
+    {
+        L"W"sv,
+        L"A"sv,
+        L"S"sv,
+        L"D"sv,
+        L"Space"sv,
+        L"Shift"sv,
+        L"LMB"sv,
+        L"RMB"sv,
+    };
+
+    eck::g_pDwFactory->CreateTextLayout(EckStrAndLen(L"bq啊"), pTf,
+        m_cxyBlock, m_cxyBlock, &pTlTemp);
+    pTlTemp->GetMetrics(&tm);
+
+    float cxMax{ m_cxyBlock }, cyMax{ m_cxyBlock };
+    EckCounter((size_t)Key::Max, i)
+    {
+        if (i == (size_t)Key::Space)
+        {
+            cxMax = GetWidthF();
+            cyMax = m_cySpaceBtn;
+        }
+        else if (i == (size_t)Key::MLeft)
+        {
+            cxMax = GetWidthF() / 2.f - (float)VeCxyKeyStrokePadding;
+            cyMax = m_cyMouseBtn;
+        }
+
+        eck::g_pDwFactory->CreateTextLayout(Text[i].data(),
+            (UINT32)Text[i].size(), pTf, cxMax, cyMax, m_pTl + i);
+        m_pTl[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+        m_pTl[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    }
 }
 
 LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -203,6 +247,13 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         rc.right = cxElem - d;
         PaintUnit(rc, d, Key::MRight);
 
+        if (m_bShowBorder)
+        {
+            m_pBrush->SetColor(App->GetColor(CApp::CrSizeBorder));
+            auto rc{ GetViewRectF() };
+            eck::InflateRect(rc, -VeCxSizeBorder / 2.f, -VeCxSizeBorder / 2.f);
+            m_pDC->DrawRectangle(rc, m_pBrush, VeCxSizeBorder);
+        }
         ECK_DUI_DBG_DRAW_FRAME;
         EndPaint(ps);
     }
@@ -213,56 +264,20 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
             float(VeCxyKeyStrokePadding + VeCxKeyStrokeBorder) * 2.f) / 3.f;
         m_cySpaceBtn = m_cxyBlock * 3.f / 4.f;
         m_cyMouseBtn = m_cxyBlock * 5.f / 6.f;
+        UpdateTextLayout();
     }
     break;
     case WM_SETFONT:
-    {
-        IDWriteTextLayout* pTlTemp{};
-        DWRITE_TEXT_METRICS tm;
-        constexpr static std::wstring_view Text[]
-        {
-            L"W"sv,
-            L"A"sv,
-            L"S"sv,
-            L"D"sv,
-            L"Space"sv,
-            L"Shift"sv,
-            L"LMB"sv,
-            L"RMB"sv,
-        };
-        const auto pTf = GetTextFormat();
-
-        eck::g_pDwFactory->CreateTextLayout(EckStrAndLen(L"bq啊"), pTf,
-            m_cxyBlock, m_cxyBlock, &pTlTemp);
-        pTlTemp->GetMetrics(&tm);
-
-        float cxMax{ m_cxyBlock }, cyMax{ m_cxyBlock };
-        EckCounter((size_t)Key::Max, i)
-        {
-            if (i == (size_t)Key::Space)
-            {
-                cxMax = GetWidthF();
-                cyMax = m_cySpaceBtn;
-            }
-            else if (i == (size_t)Key::MLeft)
-            {
-                cxMax = GetWidthF() / 2.f - (float)VeCxyKeyStrokePadding;
-                cyMax = m_cyMouseBtn;
-            }
-
-            eck::g_pDwFactory->CreateTextLayout(Text[i].data(),
-                (UINT32)Text[i].size(), pTf, cxMax, cyMax, m_pTl + i);
-            m_pTl[i]->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-            m_pTl[i]->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-        }
-    }
-    break;
+        UpdateTextLayout();
+        break;
     case WM_CREATE:
     {
         m_pDC->CreateSolidColorBrush(App->GetColor(CApp::CrKeyStrokeBkg), &m_pBrush);
         m_pDC->CreateSolidColorBrush({}, &m_pBrushForegnd);
         m_hSlot = App->GetSignal().Connect(this, &CVeKeyStroke::OnAppEvent);
         GetWnd()->RegisterTimeLine(this);
+        m_SizeBox.Attach(this);
+        m_SizeBox.SetBorderWidth(VeCxSizeBorderArrow);
     }
     break;
     case WM_DESTROY:
@@ -271,8 +286,12 @@ LRESULT CVeKeyStroke::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         SafeRelease(m_pBrush);
         SafeRelease(m_pBrushForegnd);
         GetWnd()->UnregisterTimeLine(this);
+        m_SizeBox.Detach();
     }
     break;
+    case EWM_SHOW_MENU:
+        m_bShowBorder = !!wParam;
+        return 0;
     }
     return __super::OnEvent(uMsg, wParam, lParam);
 }

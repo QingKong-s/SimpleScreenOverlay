@@ -216,5 +216,6 @@ void CModWndMarker::ModOnTick(MOD_TICK_PARAM& Opt)
                     m_ptWndTip.x + tm.width,
                     m_ptWndTip.y + tm.height });
         }
+        eck::InflateRect(Opt.rcUpdate, VeCxWndHiliBorder / 2.f, VeCxWndHiliBorder / 2.f);
     }
 }

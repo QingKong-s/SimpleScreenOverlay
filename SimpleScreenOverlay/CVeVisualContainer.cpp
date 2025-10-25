@@ -53,6 +53,8 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+    case WM_NCHITTEST:
+        return HTTRANSPARENT;
     case WM_PAINT:
     {
         MOD_RENDER_PARAM Opt
@@ -128,12 +130,13 @@ LRESULT CVeVisualContainer::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
     break;
     case WM_DESTROY:
     {
+        CALL_ALL_MOD(ModUnInit());
         SafeRelease(m_pBrTemp);
+        SafeRelease(m_pBrRainbow);
         SafeRelease(m_pDC1);
         m_TcWatermark.Invalidate();
         App->GetSignal().Disconnect(m_hSlot);
         GetWnd()->UnregisterTimeLine(this);
-        CALL_ALL_MOD(ModUnInit());
     }
     break;
     }

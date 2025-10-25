@@ -478,11 +478,18 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
             rcBlock.bottom = rcBlock.top + m_cxyBlock;
             PaintUnit(rcBlock, VeCxKeyStrokeBorder, e);
         }
+
+        if (m_bShowBorder)
+        {
+            m_pBrush->SetColor(App->GetColor(CApp::CrSizeBorder));
+            auto rc{ GetViewRectF() };
+            eck::InflateRect(rc, -VeCxSizeBorder / 2.f, -VeCxSizeBorder / 2.f);
+            m_pDC->DrawRectangle(rc, m_pBrush, VeCxSizeBorder);
+        }
         ECK_DUI_DBG_DRAW_FRAME;
         EndPaint(ps);
     }
     break;
-
     case WM_SIZE:
     {
         ECK_DUILOCK;
@@ -492,24 +499,28 @@ LRESULT CVeKeyStroke2::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         GetWnd()->WakeRenderThread();
     }
     break;
-
     case WM_CREATE:
     {
         m_pDC->CreateSolidColorBrush({}, &m_pBrush);
         m_pDC->CreateSolidColorBrush({}, &m_pBrushForegnd);
         m_hSlot = App->GetSignal().Connect(this, &CVeKeyStroke2::OnAppEvent);
         GetWnd()->RegisterTimeLine(this);
+        m_SizeBox.Attach(this);
+        m_SizeBox.SetBorderWidth(VeCxSizeBorderArrow);
     }
     break;
-
     case WM_DESTROY:
     {
         App->GetSignal().Disconnect(m_hSlot);
         SafeRelease(m_pBrush);
         SafeRelease(m_pBrushForegnd);
         GetWnd()->UnregisterTimeLine(this);
+        m_SizeBox.Detach();
     }
     break;
+    case EWM_SHOW_MENU:
+        m_bShowBorder = !!wParam;
+        return 0;
     }
     return __super::OnEvent(uMsg, wParam, lParam);
 }

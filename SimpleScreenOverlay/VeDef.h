@@ -31,7 +31,10 @@ VeCxyMenuTipMargin = 5,
 
 VeCxClickStroke = 4,
 
-VeCxWheelIndicator = 15
+VeCxWheelIndicator = 15,
+
+VeCxSizeBorder = 2,
+VeCxSizeBorderArrow = 5
 ;
 
 enum
@@ -46,8 +49,10 @@ enum
 enum
 {
 	UIE_BEGIN = Dui::EE_PRIVATE_BEGIN,
-
 	UIE_MENU_GETDISPINFO,
+
+	EWM_PRIVBEGIN0 = Dui::EWM_PRIVBEGIN,
+	EWM_SHOW_MENU,// (bShow, 0)
 };
 
 enum

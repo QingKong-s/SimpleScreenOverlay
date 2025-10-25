@@ -57,6 +57,8 @@ public:
 
         CrLine,
 
+        CrSizeBorder,
+
         CrMax
     };
 
@@ -84,6 +86,8 @@ public:
         { 0.f,0.f,0.f,0.6f },
 
         { 0.f,0.f,0.f,0.6f },
+
+        eck::ColorrefToD2DColorF(eck::Colorref::Aqua),
     };
 
     constexpr static D2D1_COLOR_F ColorDark[CrMax]
@@ -110,6 +114,8 @@ public:
         { 1.f,1.f,1.f,0.6f },
 
         { 1.f,1.f,1.f,0.6f },
+
+        eck::ColorrefToD2DColorF(eck::Colorref::Aqua),
     };
 private:
     struct OPT

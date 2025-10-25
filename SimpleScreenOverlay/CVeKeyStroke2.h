@@ -40,11 +40,14 @@ private:
         }
     };
 
+    Dui::CSizeBox m_SizeBox{};
     CApp::HSlot m_hSlot{};
     ID2D1SolidColorBrush* m_pBrush{};
     ID2D1SolidColorBrush* m_pBrushForegnd{};
     std::vector<ITEM> m_vItem{};// 虚拟键代码从小到大排序
     float m_cxyBlock{};
+
+    BOOLEAN m_bShowBorder{};
 
     void OnAppEvent(Notify eNotify, const SSONOTIFY& n);
 

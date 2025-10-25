@@ -44,7 +44,7 @@ void CModCursorLocation::ReCreateBrush()
 HRESULT CModCursorLocation::ModInit(CVeVisualContainer* pContainer)
 {
     __super::ModInit(pContainer);
-    pContainer->GetSignal().Connect(
+    m_hSlot = pContainer->GetSignal().Connect(
         [&](UINT uMsg, WPARAM wParam, LPARAM lParam, eck::SlotCtx& Ctx) -> LRESULT
         {
             switch (uMsg)

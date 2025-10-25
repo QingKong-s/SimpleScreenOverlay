@@ -295,16 +295,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_CursorSize = eck::GetCursorSize(GetUserDpi());
 
 		m_pCompMenuSwitch = new Dui::CCompositorPageAn{};
-		m_pCompMenuSwitch->InitAsTranslationOpacity();
-		const auto cx = GetClientWidthLog();
-		const auto cy = GetClientHeightLog();
-		// 保证VisualContainer的Z序低于MenuContainer
-		m_VisualContainer.Create(nullptr, 0, 0,
-			0, 0, cx, cy, nullptr, this);
-		m_MenuContainer.Create(nullptr, 0, 0,
-			0, 0, cx, cy, nullptr, this);
-		m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
-		RegisterTimeLine(this);
+        m_pCompMenuSwitch->InitAsTranslationOpacity();
+        const auto cx = GetClientWidthLog();
+        const auto cy = GetClientHeightLog();
+        m_MenuContainer.Create(nullptr, 0, 0, 0, 0, cx, cy, nullptr, this);
+        m_VisualContainer.Create(nullptr, 0, 0, 0, 0, cx, cy, nullptr, this);
+        m_VisualContainer.SetTextFormat(App->GetTextFormatCommon());
+        RegisterTimeLine(this);
 
 		const auto bDark = ShouldAppsUseDarkMode();
 		App->SetDarkMode(bDark);
@@ -414,6 +411,7 @@ void CWndMain::SwitchMenuShowing(BOOL bShow)
 	m_MenuContainer.SetVisible(TRUE);
 	m_bMenuAn = TRUE;
 	m_bShowMenu = bShow;
+	BroadcastEvent(EWM_SHOW_MENU, bShow, 0);
 #if SSO_WINRT
 	if (App->GetOpt().bBlurBkg)
 	{

@@ -28,6 +28,9 @@
     <Filter Include="UI\模块">
       <UniqueIdentifier>{b98953a0-921e-47a4-8aa3-e497c2bddec6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\模块2">
+      <UniqueIdentifier>{c275cb4b-ed35-4d80-ba67-ba8d548aa3dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -60,12 +63,6 @@
     <ClInclude Include="CVeVisualContainer.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="CVeKeyStroke.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CVeKeyStroke2.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="CGrTextCache.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -96,6 +93,12 @@
     <ClInclude Include="CModCursorPos.h">
       <Filter>UI\模块</Filter>
     </ClInclude>
+    <ClInclude Include="CVeKeyStroke.h">
+      <Filter>UI\模块2</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeKeyStroke2.h">
+      <Filter>UI\模块2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -125,12 +128,6 @@
     <ClCompile Include="CVeVisualContainer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="CVeKeyStroke.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CVeKeyStroke2.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="CGrTextCache.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -157,6 +154,12 @@
     </ClCompile>
     <ClCompile Include="CModCursorPos.cpp">
       <Filter>UI\模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeKeyStroke.cpp">
+      <Filter>UI\模块2</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeKeyStroke2.cpp">
+      <Filter>UI\模块2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

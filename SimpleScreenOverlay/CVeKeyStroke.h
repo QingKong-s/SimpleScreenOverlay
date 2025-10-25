@@ -20,6 +20,8 @@ private:
 
         Max,
     };
+
+    Dui::CSizeBox m_SizeBox{};
     CApp::HSlot m_hSlot{};
     ID2D1SolidColorBrush* m_pBrush{};
     ID2D1SolidColorBrush* m_pBrushForegnd{};
@@ -31,6 +33,7 @@ private:
     IDWriteTextLayout* m_pTl[(size_t)Key::Max]{};
 
     BOOLEAN m_bLeft{ TRUE };
+    BOOLEAN m_bShowBorder{};
 
     Key VkToKey(UINT vk);
     UINT KeyToVk(Key eKey);
@@ -38,6 +41,8 @@ private:
     void OnAppEvent(Notify eNotify, const SSONOTIFY& n);
 
     void PaintUnit(const D2D1_RECT_F& rc, float cxLine, Key eKey);
+
+    void UpdateTextLayout();
 public:
     LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

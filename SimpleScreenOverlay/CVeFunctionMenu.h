@@ -13,9 +13,7 @@ private:
     ID2D1SolidColorBrush* m_pBrush{};
     IDWriteTextLayout* m_pTextLayout{};
 
-    BOOLEAN m_bLBtnDown{};
-    POINT m_ptDragStart{};
-    POINT m_ptDragOffset{};
+    Dui::CSizeBox m_SizeBox{};
 public:
     LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

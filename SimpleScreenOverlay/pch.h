@@ -12,6 +12,7 @@
 #include "eck\UIAccess.h"
 #include "eck\CIniExt.h"
 #include "eck\DwLayoutPath.h"
+#include "eck\DuiElemSizeBox.h"
 
 #if SSO_WINRT
 #include "eck\WinRtDCompInterop.h"

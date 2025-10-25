@@ -59,36 +59,6 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     break;
 
-    case WM_MOUSEMOVE:
-    {
-        if (m_bLBtnDown)
-        {
-            const POINT pt ECK_GET_PT_LPARAM(lParam);
-            SetPos(
-                float(m_ptDragOffset.x + pt.x - m_ptDragStart.x),
-                float(m_ptDragOffset.y + pt.y - m_ptDragStart.y)
-            );
-        }
-    }
-    return 0;
-    case WM_LBUTTONDOWN:
-    {
-        m_ptDragStart = ECK_GET_PT_LPARAM(lParam);
-        m_ptDragOffset = { (int)GetRectF().left,(int)GetRectF().top };
-        m_bLBtnDown = TRUE;
-        SetCapture();
-    }
-    return 0;
-    case WM_LBUTTONUP:
-    {
-        if (m_bLBtnDown)
-        {
-            ReleaseCapture();
-            m_bLBtnDown = FALSE;
-        }
-    }
-    return 0;
-
     case WM_SETTEXT:
     {
         ECK_DUILOCK;
@@ -112,11 +82,15 @@ LRESULT CVeFunctionMenu::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         m_LV.SetTextFormat(App->GetTextFormatCommon());
         SetTextFormat(App->GetTextFormatCommon());
+
+        m_SizeBox.SetAllowSize(FALSE);
+        m_SizeBox.Attach(this);
     }
     break;
     case WM_DESTROY:
     {
         SafeRelease(m_pBrush);
+        m_SizeBox.Detach();
     }
     break;
     }
